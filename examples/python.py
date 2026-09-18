@@ -9,7 +9,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model=os.getenv("AIWAVE_MODEL", "deepseek-v4-pro"),
+    model=os.getenv("AIWAVE_MODEL", "deepseek-v4-flash"),
     messages=[{"role": "user", "content": "Say hello in one sentence."}],
     max_tokens=32,
 )

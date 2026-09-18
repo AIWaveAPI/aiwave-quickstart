@@ -6,7 +6,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: process.env.AIWAVE_MODEL || "deepseek-v4-pro",
+  model: process.env.AIWAVE_MODEL || "deepseek-v4-flash",
   messages: [{ role: "user", content: "Say hello in one sentence." }],
   max_tokens: 32,
 });
