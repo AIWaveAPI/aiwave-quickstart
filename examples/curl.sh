@@ -7,4 +7,4 @@ MODEL="${AIWAVE_MODEL:-deepseek-v4-flash}"
 curl "$BASE_URL/chat/completions" \
   -H "Authorization: Bearer $AIWAVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"max_tokens\":32}"
+  -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"max_tokens\":64}"

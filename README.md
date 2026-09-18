@@ -23,7 +23,7 @@ The key belongs in your environment or secret manager. Do not commit it.
 curl "$AIWAVE_BASE_URL/chat/completions" \
   -H "Authorization: Bearer $AIWAVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"model\":\"$AIWAVE_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"max_tokens\":32}"
+  -d "{\"model\":\"$AIWAVE_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"max_tokens\":64}"
 ```
 
 ### Python

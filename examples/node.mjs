@@ -8,6 +8,6 @@ const client = new OpenAI({
 const response = await client.chat.completions.create({
   model: process.env.AIWAVE_MODEL || "deepseek-v4-flash",
   messages: [{ role: "user", content: "Say hello in one sentence." }],
-  max_tokens: 32,
+  max_tokens: 64,
 });
 console.log(response.choices[0].message.content);
