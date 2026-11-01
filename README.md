@@ -43,34 +43,14 @@ npm install openai
 node examples/node.mjs
 ```
 
-## 3. Generate a video clip
-
-The same key also drives AI video routes — Kling, Seedance, Hailuo, Wan, and Vidu. Most aggregators don't offer video at all.
-
-```bash
-curl "$AIWAVE_BASE_URL/video/generations" \
-  -H "Authorization: Bearer $AIWAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"model\":\"kling-v2-6\",\"prompt\":\"A red sports car drifting through a neon-lit city at night, cinematic tracking shot, rain reflections\"}"
-```
-
-The response contains a task id. Poll it until the clip URL appears:
-
-```bash
-curl "https://aiwave.live/v1/query/video_generation?task_id=TASK_ID" \
-  -H "Authorization: Bearer $AIWAVE_API_KEY"
-```
-
-Video routes require a paid account group (from $5). Full list of video models: [aiwave.live/models](https://aiwave.live/models).
-
-## 4. Choose a model
+## 3. Choose a model
 
 Use the public model list at [aiwave.live/models](https://aiwave.live/models)
 and the dated rate card at [aiwave.live/pricing](https://aiwave.live/pricing).
 Model IDs are explicit, so you can change the model without changing the
 request shape.
 
-Popular picks:
+Popular picks (reasoning & chat):
 
 | Model | Best for | Rate |
 |---|---|---|
@@ -78,9 +58,42 @@ Popular picks:
 | `deepseek-v4-pro` | Flagship reasoning | $1.32 / $3.96 per 1M |
 | `glm-5` | Balanced general use | $1.55 / $4.96 per 1M |
 | `kimi-k3` | Long-context workloads | see [pricing](https://aiwave.live/pricing) |
-| `kling-v2-6` | Cheapest video tier | ~$0.04 / clip |
+| `qwen3.8-max` | Qwen flagship | see [pricing](https://aiwave.live/pricing) |
 
-## 5. Handle the common responses
+## 5. AI video (experimental)
+
+> **Status: experimental.** The video endpoint occasionally surfaces upstream
+> channel errors while we harden it. Try it, but don't build production
+> workflows on it yet. A much better experience — a full cinematic prompt
+> system and storyboard engine — is coming with **AIWave Canvas** (see below).
+
+The same key also drives AI video routes — Kling, Seedance, Hailuo, Wan, and
+Vidu. Video routes require a paid account group (from $5).
+
+```bash
+bash examples/video_curl.sh "A red sports car drifting through a neon city"
+```
+
+Full list of video models: [aiwave.live/models](https://aiwave.live/models).
+
+## 6. Coming soon: AIWave Canvas
+
+We're building **AIWave Canvas** — a cinematic creation platform on top of
+these routes:
+
+- A professional prompt library (styles, camera moves, micro-expressions,
+  pacing — battle-tested on real productions, not generated filler)
+- A storyboard engine that assembles shots automatically and keeps characters
+  consistent across scenes
+- One flow from script → storyboard → rendered video
+
+**Free sample from the prompt library is already open** — see
+[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack) for three
+battle-tested cinematic style prompts you can use today with any video model.
+
+Follow the org or star the repos — Canvas launches here first.
+
+## 7. Handle the common responses
 
 - `401`: check that the key is present and the `Bearer` prefix is included.
 - `402`: add balance or use an enabled account group with available quota.
