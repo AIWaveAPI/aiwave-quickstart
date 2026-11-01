@@ -1,9 +1,9 @@
 # AIWave Quickstart
 
-Call Chinese AI models through one OpenAI-compatible endpoint — **128 live routes, 9 model families, 13 AI video routes.** Keep your client code stable while you choose the model for the job.
+Call Chinese AI models through one OpenAI-compatible endpoint — **97 public routes, 10 Chinese families, 10 public video routes.** Keep your client code stable while you choose the model for the job.
 
-[![Models](https://img.shields.io/badge/models-128%20live%20routes-blue)](https://aiwave.live/models)
-[![Video](https://img.shields.io/badge/video-13%20generation%20routes-purple)](https://aiwave.live/models)
+[![Models](https://img.shields.io/badge/public%20rate%20card-97%20routes-blue)](https://aiwave.live/models)
+[![Video](https://img.shields.io/badge/public%20video%20routes-10-purple)](https://aiwave.live/models)
 [![Docs](https://img.shields.io/badge/docs-quickstart-blue)](https://aiwave.live/docs/quickstart)
 
 ## 1. Set your environment
