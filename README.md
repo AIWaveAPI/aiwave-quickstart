@@ -76,22 +76,12 @@ bash examples/video_curl.sh "A red sports car drifting through a neon city"
 
 Full list of video models: [aiwave.live/models](https://aiwave.live/models).
 
-## 6. Coming soon: AIWave Canvas
+## 6. Prompt library sample
 
-We're building **AIWave Canvas** — a cinematic creation platform on top of
-these routes:
-
-- A professional prompt library (styles, camera moves, micro-expressions,
-  pacing — battle-tested on real productions, not generated filler)
-- A storyboard engine that assembles shots automatically and keeps characters
-  consistent across scenes
-- One flow from script → storyboard → rendered video
-
-**Free sample from the prompt library is already open** — see
-[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack) for three
-battle-tested cinematic style prompts you can use today with any video model.
-
-Follow the org or star the repos — Canvas launches here first.
+**[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack)** —
+four bilingual video-prompt modules (three cinematic styles + one camera
+move), each with a validation record and a reproduction command. Free (CC
+BY-NC). Works with any video model.
 
 ## 7. Handle the common responses
 
