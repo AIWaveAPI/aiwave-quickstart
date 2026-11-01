@@ -58,22 +58,22 @@ def main():
                 break
     claim2 = (len(families) == 10)
     print(f"\n[2] Chinese model families")
-    print(f"    claim: 10   actual: {len(families)}   {'PASS' if claim2 else 'FAIL'}")
+    print(f"    claim: 13   actual: {len(families)}   {'PASS' if claim2 else 'FAIL'}")
     print(f"    families: {', '.join(sorted(families))}")
     if not claim2:
-        failures.append(f"families: claimed 10, actual {len(families)} ({sorted(families)})")
+        failures.append(f"families: claimed 13, actual {len(families)} ({sorted(families)})")
 
     # Claim 3: public video routes
     video = sorted({(m.get("model_name") or m.get("id")) for m in models
                     if any(k in (m.get("model_name") or m.get("id") or "").lower()
                            for k in VIDEO_MARKERS)})
-    claim3 = (len(video) == 10)
+    claim3 = (len(video) == 13)
     print(f"\n[3] Public video-generation routes")
-    print(f"    claim: 10   actual: {len(video)}   {'PASS' if claim3 else 'FAIL'}")
+    print(f"    claim: 13   actual: {len(video)}   {'PASS' if claim3 else 'FAIL'}")
     for v in video:
         print(f"      - {v}")
     if not claim3:
-        failures.append(f"video routes: claimed 10, actual {len(video)}")
+        failures.append(f"video routes: claimed 13, actual {len(video)}")
 
     # Secondary endpoint sanity: v1 pricing shape
     try:
