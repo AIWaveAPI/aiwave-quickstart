@@ -1,0 +1,50 @@
+name: Bug report
+description: Something doesn't work as documented
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do **not** paste API keys or tokens. Redact them as `sk-REDACTED`.
+  - type: input
+    id: model
+    attributes:
+      label: Model ID
+      description: Exact model name, e.g. `deepseek-v4.1-flash`
+      placeholder: deepseek-v4.1-flash
+    validations:
+      required: true
+  - type: input
+    id: sdk
+    attributes:
+      label: Client / version
+      description: e.g. `aiwave (Python) 0.2.0`, `openai-python 1.51`, `curl`
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: A curl command or short snippet that shows the problem
+      render: bash
+      placeholder: |
+        curl https://aiwave.live/v1/chat/completions \
+          -H "Authorization: Bearer sk-REDACTED" \
+          -H "Content-Type: application/json" \
+          -d '{"model":"deepseek-v4.1-flash","messages":[{"role":"user","content":"hi"}]}'
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened / expected
+    validations:
+      required: true
+  - type: input
+    id: requestid
+    attributes:
+      label: Request ID
+      description: From the response headers — helps us find the log line
+    validations:
+      required: false
