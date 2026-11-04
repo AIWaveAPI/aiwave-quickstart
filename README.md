@@ -92,6 +92,26 @@ BY-NC). Works with any video model.
 - `5xx`: keep the request id, retry only when the operation is safe to repeat,
   and check the service status page.
 
+## 8. Estimate your cost
+
+Before you build, know what the workload will cost. `scripts/cost.py` reads the
+same live endpoint as the pricing page — no API key needed.
+
+```bash
+# One model, your own numbers
+python3 scripts/cost.py --model deepseek-v4-flash --messages 500 \
+  --avg-input 2000 --avg-output 500
+
+# Compare several models on a preset workload (chat / agent)
+python3 scripts/cost.py --compare glm-5,kimi-k3,deepseek-v4-pro --preset agent
+
+# Video routes are billed per clip
+python3 scripts/cost.py --preset video --model kling-v2-6 --clips 30
+```
+
+Every run prints the fetch time and the pricing version, so results are
+reproducible. Misspelled model IDs get a suggestion from the live catalog.
+
 ## Repository layout
 
 - `examples/curl.sh` — minimal shell request
@@ -101,6 +121,7 @@ BY-NC). Works with any video model.
 - `examples/video_python.py` — video generation (submit → poll → URL)
 - `examples/video_node.mjs` — same flow in Node.js
 - `.env.example` — local variable names only
+- `scripts/cost.py` — estimate cost from live prices
 
 This repository contains examples, not credentials. Replace the model ID with
 one that fits your workload and verify current pricing before production use.
