@@ -85,12 +85,17 @@ BY-NC). Works with any video model.
 
 ## 7. Handle the common responses
 
+Ready-to-copy handlers for every code below live in
+[`examples/error_handling.py`](examples/error_handling.py) and
+[`examples/error_handling.mjs`](examples/error_handling.mjs), with the full
+decision table in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
 - `401`: check that the key is present and the `Bearer` prefix is included.
 - `402`: add balance or use an enabled account group with available quota.
-- `404`: model ID not found or retired — copy the exact ID from [aiwave.live/models](https://aiwave.live/models).
-- `429`: retry with bounded exponential backoff and avoid an unbounded loop.
-- `5xx`: keep the request id, retry only when the operation is safe to repeat,
-  and check the service status page.
+- `404`: model ID not found or retired — the handler suggests the closest ID from the live catalog.
+- `429`: **use the `Retry-After` header**, then bounded exponential backoff with jitter.
+- `5xx`: keep the request id, retry only when the operation is safe to repeat.
+- Video tasks stuck at `NOT_START 0%` for >3 min: likely failed upstream — see the troubleshooting doc.
 
 ## 8. Estimate your cost
 
@@ -131,6 +136,8 @@ Security issues: **do not open a public issue** — see [SECURITY.md](SECURITY.m
 - `examples/video_node.mjs` — same flow in Node.js
 - `.env.example` — local variable names only
 - `scripts/cost.py` — estimate cost from live prices
+- `examples/error_handling.py` / `error_handling.mjs` — copy-paste error handlers
+- `docs/TROUBLESHOOTING.md` — full error decision table
 
 This repository contains examples, not credentials. Replace the model ID with
 one that fits your workload and verify current pricing before production use.
