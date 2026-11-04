@@ -97,7 +97,9 @@ BY-NC). Works with any video model.
 - `examples/curl.sh` — minimal shell request
 - `examples/python.py` — OpenAI Python client
 - `examples/node.mjs` — OpenAI Node client
-- `examples/video_curl.sh` — AI video generation + polling
+- `examples/video_curl.sh` — AI video generation + polling (curl)
+- `examples/video_python.py` — video generation (submit → poll → URL)
+- `examples/video_node.mjs` — same flow in Node.js
 - `.env.example` — local variable names only
 
 This repository contains examples, not credentials. Replace the model ID with
