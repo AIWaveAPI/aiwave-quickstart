@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a wrong price or model number
+    url: https://github.com/AIWaveAPI/aiwave-quickstart/blob/main/CONTRIBUTING.md
+    about: Highest-value contribution — see the live-endpoint rules first
+  - name: Ask a question
+    url: https://github.com/AIWaveAPI/aiwave-quickstart/discussions
+    about: Usage questions and general discussion
+  - name: Report a security vulnerability
+    url: https://github.com/AIWaveAPI/aiwave-quickstart/blob/main/SECURITY.md
+    about: Please do not open a public issue for security problems
