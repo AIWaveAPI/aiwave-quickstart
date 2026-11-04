@@ -86,7 +86,13 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Syntax-check every JS example
         run: |
-          for f in examples/*.mjs examples/*.js; do node --check "$f"; done
+          shopt -s nullglob
+          files=(examples/*.mjs examples/*.js)
+          [ ${#files[@]} -gt 0 ] || { echo "ERROR: no JS examples found"; exit 1; }
+          for f in "${files[@]}"; do node --check "$f"; done
       - name: Shell examples are valid
         run: |
-          for f in examples/*.sh; do bash -n "$f"; done
+          shopt -s nullglob
+          files=(examples/*.sh)
+          [ ${#files[@]} -gt 0 ] || { echo "ERROR: no shell examples found"; exit 1; }
+          for f in "${files[@]}"; do bash -n "$f"; done
