@@ -41,6 +41,9 @@ jobs:
           python3 -m compileall -q examples scripts
       - name: Error-handler branches behave as documented (offline)
         run: python3 scripts/test_error_handlers.py
+      - name: Provider setup write/restore path (python 3.11+ has tomllib)
+        if: matrix.python == '3.12'
+        run: python3 scripts/test_aiwave_setup.py
 
   node-examples:
     name: Node examples (${{ matrix.node }})
