@@ -133,6 +133,28 @@ open a structured [issue](https://github.com/AIWaveAPI/aiwave-quickstart/issues/
 
 Security issues: **do not open a public issue** — see [SECURITY.md](SECURITY.md).
 
+## 10. Use AIWave in Claude Code / Codex CLI
+
+One command adds AIWave as a provider to both agent CLIs.
+
+```bash
+export AIWAVE_API_KEY="sk-..."              # https://aiwave.live/register
+python3 scripts/aiwave-setup.py --dry-run    # preview, writes nothing
+python3 scripts/aiwave-setup.py              # apply
+python3 scripts/aiwave-setup.py --restore    # undo (from backups)
+```
+
+| Tool | Config file | Endpoint |
+|---|---|---|
+| Claude Code | `~/.claude/settings.json` → `env` block | `https://aiwave.live/anthropic` (Anthropic-compatible) |
+| Codex CLI | `~/.codex/config.toml` → `[model_providers.aiwave]` | `https://aiwave.live/v1` (OpenAI-compatible) |
+
+Default models (verified against the live catalog): `claude-sonnet-5-coding-team`
+for Claude Code, `deepseek-v4-pro` for Codex. Every file it touches is backed
+up to `*.aiwave.bak`, existing settings are preserved, and the key is never
+printed. Run `scripts/test_aiwave_setup.py` to verify the write/restore path
+in a temporary HOME without touching your real configs.
+
 ## Repository layout
 
 - `examples/curl.sh` — minimal shell request
