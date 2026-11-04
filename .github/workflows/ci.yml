@@ -44,6 +44,10 @@ jobs:
         # Fails with the exact file:line and the correct value if anything
         # in any repo disagrees with the live public endpoint.
         run: python3 repos/aiwave-quickstart/scripts/verify_claims.py --repo-root repos
+      - name: Every model ID in every README exists on the live card
+        # A made-up ID is worse than a missing one: developers copy it, get a
+        # 404, and leave. This catches invented IDs before they ship.
+        run: python3 repos/aiwave-quickstart/scripts/verify_model_ids.py --repo-root repos
       - name: Cost estimator smoke test
         run: python3 repos/aiwave-quickstart/scripts/cost.py --preset chat --model deepseek-v4-flash
       - name: All scripts compile
