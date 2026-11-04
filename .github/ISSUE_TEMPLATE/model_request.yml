@@ -1,7 +1,7 @@
 name: Model request
 description: Ask for a model to be added to the catalog
 title: "[model] "
-labels: ["model-request"]
+labels: ["enhancement"]
 body:
   - type: input
     id: model
