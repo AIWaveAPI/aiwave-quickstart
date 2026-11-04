@@ -89,8 +89,7 @@ Popular picks (reasoning & chat):
 
 > **Status: experimental.** The video endpoint occasionally surfaces upstream
 > channel errors while we harden it. Try it, but don't build production
-> workflows on it yet. A much better experience — a full cinematic prompt
-> system and storyboard engine — is coming with **AIWave Canvas** (see below).
+> workflows on it yet.
 
 The same key also drives AI video routes — Kling, Seedance, Hailuo, Wan, and
 Vidu. Video routes require a paid account group (from $5).
@@ -177,9 +176,9 @@ One command adds AIWave as a provider to both agent CLIs.
 
 ```bash
 export AIWAVE_API_KEY="sk-..."              # https://aiwave.live/register
-python3 scripts/aiwave-setup.py --dry-run    # preview, writes nothing
+python3 scripts/aiwave-setup.py --dry-run    # lists changed fields, writes nothing
 python3 scripts/aiwave-setup.py              # apply
-python3 scripts/aiwave-setup.py --restore    # undo (from backups)
+python3 scripts/aiwave-setup.py --restore    # undo only if config is unchanged since setup
 ```
 
 | Tool | Config file | Endpoint |
@@ -189,9 +188,13 @@ python3 scripts/aiwave-setup.py --restore    # undo (from backups)
 
 Default models (verified against the live catalog): `claude-sonnet-5-coding-team`
 for Claude Code, `deepseek-v4-pro` for Codex. Every file it touches is backed
-up to `*.aiwave.bak`, existing settings are preserved, and the key is never
-printed. Run `scripts/test_aiwave_setup.py` to verify the write/restore path
-in a temporary HOME without touching your real configs.
+up to a private `*.aiwave.bak.*` file. Repeating setup retains the original
+pre-AIWave backup. The preview lists field names only;
+it never prints existing configuration values or the key. If you edit a config
+after setup, `--restore` refuses to overwrite those later changes. Review the
+saved backup and merge it manually instead. Run `scripts/test_aiwave_setup.py`
+and `python3 -m unittest scripts.test_aiwave_setup_safety` to verify setup and
+restore in temporary directories without touching your real configs.
 
 ## Repository layout
 

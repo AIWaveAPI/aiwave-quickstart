@@ -73,6 +73,8 @@ jobs:
         run: python3 scripts/test_error_handlers.py
       - name: Claims tools stay in sync (offline)
         run: python3 scripts/test_claims_tools.py
+      - name: Provider setup keeps existing configs private and reversible (offline)
+        run: python3 -m unittest scripts.test_aiwave_setup_safety
       - name: Provider setup write/restore path (python 3.11+ has tomllib)
         if: matrix.python == '3.12'
         run: python3 scripts/test_aiwave_setup.py

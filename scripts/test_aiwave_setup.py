@@ -45,8 +45,8 @@ with tempfile.TemporaryDirectory() as td:
         print("  PASS: pre-existing model ID replaced with an in-catalog one")
     except Exception as e:
         print("  FAIL TOML:", e); raise
-    assert (root / ".claude" / "settings.json.aiwave.bak").exists()
-    assert (root / ".codex" / "config.toml.aiwave.bak").exists()
+    assert len(list((root / ".claude").glob("settings.json.aiwave.bak.*"))) == 1
+    assert len(list((root / ".codex").glob("config.toml.aiwave.bak.*"))) == 1
     print("  PASS: backups created for both")
 
     # --- restore ---
