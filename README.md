@@ -6,6 +6,31 @@ Call Chinese AI models through one OpenAI-compatible endpoint — **97 public ro
 [![Video](https://img.shields.io/badge/public%20video%20routes-13-purple)](https://aiwave.live/models)
 [![Docs](https://img.shields.io/badge/docs-quickstart-blue)](https://aiwave.live/docs/quickstart)
 
+## 0. Which model ID should I use?
+
+Model IDs are exact and case-sensitive. Vendors retire them without notice, so
+confirm against the live public rate card instead of copying an ID from an old
+blog post:
+
+```bash
+curl -s https://aiwave.live/api/pricing | python3 -c \
+  "import sys,json; d=json.load(sys.stdin); ms=d['models'] if 'models' in d else d['data']; print('\n'.join(m['model_name'] for m in ms))"
+```
+
+Common searches and the exact IDs on our card (a lookup table, not a review):
+
+| Searching for | Exact IDs currently on the card |
+|---|---|
+| `deepseek v4 flash` / `deepseek flash` | `deepseek-v4-flash`, `deepseek-flash`, `deepseek-v4.1-flash` |
+| `deepseek v4 pro` | `deepseek-v4-pro` |
+| `qwen3 coder` / Qwen coding | `qwen3.8-max`, `qwen3.8-27b`; coding-specific: `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`. There is no `qwen3-coder` ID on our card. |
+| `kimi k3` | `kimi-k3`, `kimi-k2.6` |
+| `chinese embedding models` | `qwen3.7-text-embedding` |
+| `kling` / `seedance` / `wan` video | `kling-v3`, `kling-video-o1`, `doubao-seedance-2-5-260628`, `wan3.0-video` |
+| `chinese ai api pricing 2026` | [Dated USD rates](https://aiwave.live/pricing) · `python3 scripts/cost.py --compare <ids>` |
+
+Every number in this repo is checked against that endpoint by CI daily.
+
 ## 1. Set your environment
 
 Create a key in the [AIWave console](https://aiwave.live/register), then export it locally:
