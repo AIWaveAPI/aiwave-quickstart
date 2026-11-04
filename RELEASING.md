@@ -6,16 +6,17 @@ This repo holds examples and scripts, not a published package. The SDKs
 ## Before any release
 
 ```bash
-python3 scripts/verify_claims.py          # published numbers vs live endpoint
+python3 scripts/verify_claims.py          # every repo's numbers vs the live endpoint
+python3 scripts/test_claims_tools.py      # verify/sync tools still agree
 python3 scripts/test_error_handlers.py    # offline behavior of error handlers
 bash -n examples/*.sh                     # shell syntax
 node --check examples/*.mjs               # JS syntax
 ```
 
-`verify_claims.py` reads the live public endpoint. If it fails, the catalog
-changed — update the README numbers **and** the expected values in the
-script, with the new date and pricing version, then re-run. Never patch
-numbers without re-running the check.
+`verify_claims.py` reads the live public endpoint and scans the text of all
+repos. If it fails, the catalog changed — run `sync_claims.py` (it rewrites
+only the numbers and stamps `catalog-claims.json`), review `git diff`, then
+re-run the verify. Never patch numbers by hand.
 
 CI (`.github/workflows/ci.yml`) runs these on every push and also daily
 at 06:17 UTC, so catalog drift is caught even when nobody commits.
