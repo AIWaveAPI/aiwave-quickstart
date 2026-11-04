@@ -112,6 +112,15 @@ python3 scripts/cost.py --preset video --model kling-v2-6 --clips 30
 Every run prints the fetch time and the pricing version, so results are
 reproducible. Misspelled model IDs get a suggestion from the live catalog.
 
+## 9. Contributing & support
+
+Found a wrong price? That's the most useful contribution you can make — see
+[CONTRIBUTING.md](CONTRIBUTING.md). For other questions, use
+[Discussions](https://github.com/AIWaveAPI/aiwave-quickstart/discussions) or
+open a structured [issue](https://github.com/AIWaveAPI/aiwave-quickstart/issues/new/choose).
+
+Security issues: **do not open a public issue** — see [SECURITY.md](SECURITY.md).
+
 ## Repository layout
 
 - `examples/curl.sh` — minimal shell request

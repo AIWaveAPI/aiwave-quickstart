@@ -1,0 +1,50 @@
+# Contributing
+
+Thanks for helping. The most valuable contribution is small and factual.
+
+## Reporting a pricing error (highest value)
+
+Our catalog is generated from a live public endpoint, and vendors change
+prices without notice. If any number on the website, in a README, or in
+`MODEL_REFERENCE.md` disagrees with `https://aiwave.live/api/pricing`, open
+an issue with:
+
+1. The page or file where the wrong number appears
+2. The exact model ID
+3. What `curl -s https://aiwave.live/api/pricing` returned, with the date
+
+We treat these as bugs, not suggestions. Please don't "fix" numbers by
+copying from another aggregator — the live endpoint is the only source of
+truth.
+
+## Adding an example
+
+- Put runnable examples in `examples/` (curl, Python, Node)
+- No API keys in code — use `AIWAVE_API_KEY` and placeholders
+- Keep it minimal: one idea per example
+- State any caveats you learned the hard way (timeouts, silent failures,
+  required parameters). Those notes are worth more than the code.
+- If it makes a claim about prices or model counts, verify it against
+  `https://aiwave.live/api/pricing` and include the date
+
+## Verifying claims
+
+Run before opening a PR:
+
+```bash
+python3 scripts/verify_claims.py   # checks published numbers vs the live endpoint
+python3 scripts/cost.py --preset chat --model deepseek-v4-flash
+```
+
+If `verify_claims.py` fails, the README may be out of date — open an issue
+rather than patching the numbers by hand.
+
+## Code style
+
+Python 3.8+, no third-party dependencies in `scripts/`. Shell examples
+use `set -Eeuo pipefail`. JavaScript examples target Node LTS.
+
+## Disclosure
+
+If you work on AIWave, please say so in your PR or issue so reviewers can
+weigh it accordingly.

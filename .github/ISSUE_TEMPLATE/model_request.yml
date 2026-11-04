@@ -1,0 +1,25 @@
+name: Model request
+description: Ask for a model to be added to the catalog
+title: "[model] "
+labels: ["model-request"]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Model name and vendor
+      placeholder: "DeepSeek V4.2 / vendor name"
+    validations:
+      required: true
+  - type: input
+    id: use_case
+    attributes:
+      label: What would you use it for
+    validations:
+      required: true
+  - type: input
+    id: official_price
+    attributes:
+      label: Official list price (with source link and date)
+      description: We only add models whose pricing we can verify publicly
+    validations:
+      required: false
