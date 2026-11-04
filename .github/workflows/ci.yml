@@ -5,24 +5,51 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    # Daily drift check: published numbers vs the live public endpoint
+    # Daily drift check: published numbers vs the live public endpoint,
+    # across ALL repos in the org (not just this one).
     - cron: "17 6 * * *"
+
+permissions:
+  contents: read
 
 jobs:
   claims:
-    name: Verify published claims (live endpoint)
+    name: Verify every published catalog number (live endpoint, all repos)
     runs-on: ubuntu-latest
     steps:
+      - name: Check out all AIWaveAPI repos into one tree
+        uses: actions/checkout@v4
+        with:
+          path: repos/aiwave-quickstart
       - uses: actions/checkout@v4
+        with:
+          repository: AIWaveAPI/.github
+          path: repos/org-profile
+      - uses: actions/checkout@v4
+        with:
+          repository: AIWaveAPI/aiwave-sdk-python
+          path: repos/aiwave-sdk-python
+      - uses: actions/checkout@v4
+        with:
+          repository: AIWaveAPI/aiwave-sdk-node
+          path: repos/aiwave-sdk-node
+      - uses: actions/checkout@v4
+        with:
+          repository: AIWaveAPI/aiwave-video-pack
+          path: repos/aiwave-video-pack
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Check README numbers against the live catalog
-        run: python3 scripts/verify_claims.py
+      - name: Scan every published number for drift
+        # Fails with the exact file:line and the correct value if anything
+        # in any repo disagrees with the live public endpoint.
+        run: python3 repos/aiwave-quickstart/scripts/verify_claims.py --repo-root repos
       - name: Cost estimator smoke test
-        run: python3 scripts/cost.py --preset chat --model deepseek-v4-flash
-      - name: Model reference generator is syntactically valid
-        run: python3 -m py_compile scripts/verify_claims.py scripts/cost.py
+        run: python3 repos/aiwave-quickstart/scripts/cost.py --preset chat --model deepseek-v4-flash
+      - name: All scripts compile
+        run: python3 -m py_compile repos/aiwave-quickstart/scripts/*.py
+      - name: verify/sync tools agree (offline, anti-loop guarantee)
+        run: python3 repos/aiwave-quickstart/scripts/test_claims_tools.py
 
   python-examples:
     name: Python examples (${{ matrix.python }})
@@ -37,10 +64,11 @@ jobs:
           python-version: ${{ matrix.python }}
       # Examples use only the standard library (urllib), so no install step.
       - name: Syntax-check every Python example and script
-        run: |
-          python3 -m compileall -q examples scripts
+        run: python3 -m compileall -q examples scripts
       - name: Error-handler branches behave as documented (offline)
         run: python3 scripts/test_error_handlers.py
+      - name: Claims tools stay in sync (offline)
+        run: python3 scripts/test_claims_tools.py
       - name: Provider setup write/restore path (python 3.11+ has tomllib)
         if: matrix.python == '3.12'
         run: python3 scripts/test_aiwave_setup.py
