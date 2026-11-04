@@ -117,6 +117,13 @@ python3 scripts/cost.py --preset video --model kling-v2-6 --clips 30
 Every run prints the fetch time and the pricing version, so results are
 reproducible. Misspelled model IDs get a suggestion from the live catalog.
 
+## 8b. Continuous verification
+
+Every push runs [CI](.github/workflows/ci.yml): Python 3.8/3.10/3.12 and
+Node 18/20 syntax checks, offline error-handler tests, and a live check
+that the numbers in this README still match the public pricing endpoint.
+CI also runs daily so catalog drift is caught without a commit.
+
 ## 9. Contributing & support
 
 Found a wrong price? That's the most useful contribution you can make — see
