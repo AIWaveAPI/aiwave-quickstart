@@ -10,7 +10,7 @@ Copy the handler instead of writing your own.
 | | |
 |---|---|
 | **Means** | The key is missing, malformed, or not accepted. |
-| **First check** | `echo $AIWAVE_API_KEY` — is it set? Does the header say `Authorization: Bearer <key>`? The word `Bearer` and the space are required. |
+| **First check** | Use `test -n "${AIWAVE_API_KEY:-}" && printf 'AIWAVE_API_KEY is set\n'` to confirm the variable is present without printing its value. Check that your request uses `Authorization: Bearer <key>`; the word `Bearer` and the space are required. Never paste the key or an unredacted request into an issue. |
 | **Common causes** | Key rotated in the console; key copied with a trailing newline; key from another provider; using `api-key:` instead of `Authorization`. |
 | **Fix** | Create a key at https://aiwave.live/register, store it in a secret manager, never in source. |
 | **Retry?** | No. |
