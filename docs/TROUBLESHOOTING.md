@@ -42,7 +42,7 @@ Copy the handler instead of writing your own.
 | **Means** | You exceeded a per-minute or per-group request limit. |
 | **First check** | The `Retry-After` response header — **it wins over any local backoff**. |
 | **Common causes** | Parallel scripts; frontend auto-refresh; no jitter (all clients retry at the same instant). |
-| **Fix** | Bounded exponential backoff with jitter. Our handler caps waits at 30s and stops after a bounded number of attempts. Note that OpenAI's official Python/Node SDKs retry 429 twice by default — don't stack another retry loop on top of that. |
+| **Fix** | Honor the server's `Retry-After`. If it exceeds 60 seconds, the example stops automatic retries and reports the delay. Without the header, it uses bounded exponential backoff with jitter (up to 30 seconds). Avoid stacking retries on top of an SDK's own retry policy. |
 | **Retry?** | Yes, with backoff. |
 
 ## 5xx — server or upstream error
@@ -52,8 +52,8 @@ Copy the handler instead of writing your own.
 | **Means** | Our gateway or an upstream vendor failed. |
 | **First check** | Save the `x-request-id` response header — support can find the exact log line. |
 | **Common causes** | Upstream vendor incident; timeout on a very long generation; transient network. |
-| **Fix** | Retry **only when the operation is safe to repeat**. Chat completions are; a paid video/ generation job may submit twice. Check the service status page before mass retries. |
-| **Retry?** | Yes, cautiously. |
+| **Fix** | Do not retry automatically. The upstream may have completed the request even if this response failed. Keep the request ID, inspect usage or task status, then decide whether a new request is acceptable. |
+| **Retry?** | No automatic retry; decide manually after checking the first request. |
 
 ## Video tasks stuck at NOT_START / 0%
 
@@ -62,8 +62,7 @@ video channels silently fail when no reference image is supplied: the task is
 accepted (HTTP 200) but never starts, and no error is returned.
 
 **Heuristic:** if a task stays at `NOT_START` with 0% progress for more than
-3 minutes, treat it as an upstream failure and submit a new task. Don't wait
-15 minutes. See
+3 minutes, keep the task ID and check its status or usage before submitting another task. A stalled display alone does not prove failure. See
 [`examples/video_python.py`](../examples/video_python.py), which implements
 this check. A single shot normally takes 5-11 minutes.
 
