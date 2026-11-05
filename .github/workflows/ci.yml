@@ -73,9 +73,11 @@ jobs:
         run: python3 scripts/test_error_handlers.py
       - name: Claims tools stay in sync (offline)
         run: python3 scripts/test_claims_tools.py
-      - name: Provider setup write/restore path (python 3.11+ has tomllib)
+      - name: Provider setup write/restore path (offline)
         if: matrix.python == '3.12'
-        run: python3 scripts/test_aiwave_setup.py
+        run: |
+          python3 scripts/test_aiwave_setup.py
+          python3 -m unittest scripts.test_aiwave_setup_safety
 
   python38:
     name: Python examples (3.8 container)
