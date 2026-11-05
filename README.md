@@ -171,27 +171,36 @@ open a structured [issue](https://github.com/AIWaveAPI/aiwave-quickstart/issues/
 
 Security issues: **do not open a public issue** — see [SECURITY.md](SECURITY.md).
 
-## 10. Use AIWave in Claude Code / Codex CLI
+## 10. Use AIWave in Claude Code
 
-One command adds AIWave as a provider to both agent CLIs.
+The setup script currently configures Claude Code only. It previews the field names
+that will change without printing your key or existing configuration values,
+retains a private backup of the original file, and refuses to overwrite edits
+made after setup.
 
 ```bash
-export AIWAVE_API_KEY="sk-..."              # https://aiwave.live/register
-python3 scripts/aiwave-setup.py --dry-run    # preview, writes nothing
-python3 scripts/aiwave-setup.py              # apply
-python3 scripts/aiwave-setup.py --restore    # undo (from backups)
+export AIWAVE_API_KEY="sk-..."                    # your own key
+python3 scripts/aiwave-setup.py --dry-run        # preview, writes nothing
+python3 scripts/aiwave-setup.py                  # configure Claude Code
+python3 scripts/aiwave-setup.py --restore        # restore if unchanged since setup
 ```
 
-| Tool | Config file | Endpoint |
-|---|---|---|
-| Claude Code | `~/.claude/settings.json` → `env` block | `https://aiwave.live/anthropic` (Anthropic-compatible) |
-| Codex CLI | `~/.codex/config.toml` → `[model_providers.aiwave]` | `https://aiwave.live/v1` (OpenAI-compatible) |
+The script writes the Anthropic-compatible endpoint
+`https://aiwave.live/anthropic` to `~/.claude/settings.json`. Its default
+model ID is `claude-sonnet-5-coding-team`; check current access and price in
+the [live catalog](https://aiwave.live/api/pricing) before use. Run
+`python3 scripts/test_aiwave_setup.py` and
+`python3 -m unittest scripts.test_aiwave_setup_safety` for offline checks.
 
-Default models (verified against the live catalog): `claude-sonnet-5-coding-team`
-for Claude Code, `deepseek-v4-pro` for Codex. Every file it touches is backed
-up to `*.aiwave.bak`, existing settings are preserved, and the key is never
-printed. Run `scripts/test_aiwave_setup.py` to verify the write/restore path
-in a temporary HOME without touching your real configs.
+**Codex CLI setup is paused.** Current Codex rejects the script's former
+`wire_api = "chat"` configuration. AIWave's Responses API compatibility
+with Codex has not yet passed an end-to-end test, so the script refuses
+`--tool codex` and `--tool both` before writing either file. Merely changing
+the value to `responses` would not establish streaming, tool-call, or
+continuation support. If you previously used this script for Codex,
+`--restore --tool codex` can restore a verified, unchanged installation
+made by the newer backup format. Older `*.aiwave.bak` files require manual
+review; the script will not overwrite later edits automatically.
 
 ## Repository layout
 
