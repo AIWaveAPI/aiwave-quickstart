@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.10", "3.12"]
+        python: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -76,6 +76,20 @@ jobs:
       - name: Provider setup write/restore path (python 3.11+ has tomllib)
         if: matrix.python == '3.12'
         run: python3 scripts/test_aiwave_setup.py
+
+  python38:
+    name: Python examples (3.8 container)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # setup-python has no 3.8 build for Ubuntu 26.04.
+      - name: Run offline Python 3.8 checks
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo python:3.8.20-slim sh -euc '
+            python -m compileall -q examples scripts
+            python scripts/test_error_handlers.py
+            python scripts/test_claims_tools.py
+          '
 
   node-examples:
     name: Node examples (${{ matrix.node }})
