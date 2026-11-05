@@ -10,7 +10,7 @@ if os.name == "nt" or not shutil.which("bash"):
     print("SKIP: requires bash")
     raise SystemExit(0)
 
-script = Path(__file__).resolve().parent / "video_curl.sh"
+script = Path(__file__).resolve().parent.parent / "examples" / "video_curl.sh"
 prompt = 'He said "go" \\ backslash\nnext line'
 with tempfile.TemporaryDirectory() as td:
     root = Path(td)
@@ -49,3 +49,4 @@ with tempfile.TemporaryDirectory() as td:
     assert "outcome unknown" in failed.stderr.lower()
     assert (root / "calls").read_text().splitlines() == ["POST"]
 print("PASS: JSON prompt, task/status parse, uncertain POST never retried")
+
