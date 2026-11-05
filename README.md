@@ -120,7 +120,7 @@ decision table in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 - `404`: model ID not found or retired — the handler suggests the closest ID from the live catalog.
 - `429`: **use the `Retry-After` header**, then bounded exponential backoff with jitter.
 - `5xx`: keep the request id, retry only when the operation is safe to repeat.
-- Video tasks stuck at `NOT_START 0%` for >3 min: likely failed upstream — see the troubleshooting doc.
+- Video tasks stuck at `NOT_START 0%` for >3 min: keep the task ID and check status or usage before resubmitting — see the troubleshooting doc.
 
 ## 8. Estimate your cost
 

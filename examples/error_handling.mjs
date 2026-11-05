@@ -9,6 +9,7 @@
 
 const BASE_URL = process.env.AIWAVE_BASE_URL || 'https://aiwave.live/v1';
 const PRICING = 'https://aiwave.live/api/pricing';
+const MAX_AUTO_WAIT_SECONDS = 60;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -44,18 +45,18 @@ async function liveModelIds() {
 /** Print a concrete next action. Returns true if the request is retryable. */
 export async function handle(status, body, { requestId, model } = {}) {
   if (status === 401) {
-    console.log('401 — authentication failed.');
+    console.log('401 �� authentication failed.');
     console.log("  Check: AIWAVE_API_KEY is set, starts with 'sk-', and the header is");
     console.log("  'Authorization: Bearer <key>' (the word Bearer is required).");
     return false;
   }
   if (status === 402) {
-    console.log('402 — insufficient balance or no enabled group with quota.');
+    console.log('402 �� insufficient balance or no enabled group with quota.');
     console.log('  Add balance at https://aiwave.live/pricing. Not retryable.');
     return false;
   }
   if (status === 404) {
-    console.log('404 — model ID not found or retired.');
+    console.log('404 �� model ID not found or retired.');
     console.log('  Copy the exact ID from https://aiwave.live/models');
     const ids = await liveModelIds();
     if (model && ids.length) {
@@ -65,16 +66,17 @@ export async function handle(status, body, { requestId, model } = {}) {
     return false;
   }
   if (status === 429) {
-    console.log('429 — rate limited. Retry with bounded exponential backoff + jitter.');
+    console.log('429 �� rate limited. Retry with bounded exponential backoff + jitter.');
     console.log("  Prefer the server's Retry-After header over local backoff.");
     return true;
   }
   if (status >= 500 && status < 600) {
-    console.log(`${status} — upstream/server error. Request id: ${requestId || '(none)'}`);
-    console.log('  Retry ONLY when the operation is safe to repeat. Keep the request id.');
-    return true;
+    console.log(`${status} �� upstream/server error. Request id: ${requestId || '(none)'}`);
+    console.log('  The upstream may have completed this request. Check usage and keep');
+    console.log('  the request id before deciding whether to submit another request.');
+    return false;
   }
-  console.log(`${status} — unhandled status: ${String(body).slice(0, 200)}`);
+  console.log(`${status} �� unhandled status: ${String(body).slice(0, 200)}`);
   return false;
 }
 
@@ -83,12 +85,14 @@ export function retryAfterSeconds(headers, attempt) {
   const raw = headers?.get?.('Retry-After');
   if (raw) {
     const n = Number(raw);
-    if (Number.isFinite(n)) return Math.min(n, 60);
+    if (Number.isFinite(n) && n >= 0) return n;
+    const deadline = Date.parse(raw);
+    if (Number.isFinite(deadline)) return Math.max(0, (deadline - Date.now()) / 1000);
   }
   return Math.min(2 ** attempt + Math.random() * 0.5, 30);
 }
 
-/** A complete request with 429/5xx retries. Copy this whole function. */
+/** A complete request with bounded 429 retries. Never auto-retry 5xx. */
 export async function chatWithRetries(model, messages, { apiKey, maxRetries = 3 } = {}) {
   const key = apiKey || process.env.AIWAVE_API_KEY;
   if (!key) throw new Error('Set AIWAVE_API_KEY first (https://aiwave.live/register)');
@@ -109,6 +113,10 @@ export async function chatWithRetries(model, messages, { apiKey, maxRetries = 3 
       throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`);
     }
     const wait = retryAfterSeconds(res.headers, attempt);
+    if (wait > MAX_AUTO_WAIT_SECONDS) {
+      console.log(`  Retry-After is ${Math.ceil(wait)}s; stop automatic retries and try later.`);
+      throw new Error(`HTTP ${res.status}: retry after ${Math.ceil(wait)}s`);
+    }
     console.log(`  retrying in ${wait.toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})`);
     await sleep(wait * 1000);
   }
@@ -121,6 +129,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       [{ role: 'user', content: 'hi' }],
       { apiKey: 'sk-invalid-for-smoke-test', maxRetries: 0 });
   } catch (e) {
-    console.log(`  ${e.message.slice(0, 80)} — handler printed the checklist above.`);
+    console.log(`  ${e.message.slice(0, 80)} �� handler printed the checklist above.`);
   }
 }
