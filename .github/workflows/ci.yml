@@ -78,6 +78,9 @@ jobs:
         run: |
           python3 scripts/test_aiwave_setup.py
           python3 -m unittest scripts.test_aiwave_setup_safety
+      - name: Video curl JSON and submission safety (offline)
+        if: matrix.python == '3.12'
+        run: python3 scripts/test_video_curl.py
 
   python38:
     name: Python examples (3.8 container)
