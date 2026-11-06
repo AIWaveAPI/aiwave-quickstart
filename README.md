@@ -202,6 +202,16 @@ continuation support. If you previously used this script for Codex,
 made by the newer backup format. Older `*.aiwave.bak` files require manual
 review; the script will not overwrite later edits automatically.
 
+## 11. Connect WorkBuddy with your own AIWave key
+
+The [WorkBuddy guide](docs/WORKBUDDY.md) covers a local, reversible Windows
+setup. Start with `python scripts/workbuddy_connect.py plan` to see the exact
+model IDs and current catalog-based price estimates before any file changes.
+The installer prompts for **your** AIWave key locally and never prints it.
+WorkBuddy's connection test and actual tasks can incur usage charges; verify
+the model and bill in your AIWave Console. Catalog eligibility is not a claim
+that every WorkBuddy capability has been tested.
+
 ## Repository layout
 
 - `examples/curl.sh` — minimal shell request
@@ -212,6 +222,7 @@ review; the script will not overwrite later edits automatically.
 - `examples/video_node.mjs` — same flow in Node.js
 - `.env.example` — local variable names only
 - `scripts/cost.py` — estimate cost from live prices
+- `scripts/workbuddy_connect.py` — preview, add, verify, and undo local WorkBuddy models
 - `examples/error_handling.py` / `error_handling.mjs` — copy-paste error handlers
 - `docs/TROUBLESHOOTING.md` — full error decision table
 

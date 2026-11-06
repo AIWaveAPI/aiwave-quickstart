@@ -78,6 +78,8 @@ jobs:
         run: |
           python3 scripts/test_aiwave_setup.py
           python3 -m unittest scripts.test_aiwave_setup_safety
+      - name: WorkBuddy connector safety (offline)
+        run: python3 -m unittest scripts.test_workbuddy_connect
       - name: Video curl JSON and submission safety (offline)
         if: matrix.python == '3.12'
         run: python3 scripts/test_video_curl.py
@@ -94,6 +96,7 @@ jobs:
             python -m compileall -q examples scripts
             python scripts/test_error_handlers.py
             python scripts/test_claims_tools.py
+            python -m unittest scripts.test_workbuddy_connect
           '
 
   node-examples:
