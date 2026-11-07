@@ -37,6 +37,10 @@ jobs:
         with:
           repository: AIWaveAPI/aiwave-video-pack
           path: repos/aiwave-video-pack
+      - uses: actions/checkout@v4
+        with:
+          repository: AIWaveAPI/credit-receipt
+          path: repos/credit-receipt
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -140,3 +144,4 @@ jobs:
           files=(examples/*.sh)
           [ ${#files[@]} -gt 0 ] || { echo "ERROR: no shell examples found"; exit 1; }
           for f in "${files[@]}"; do bash -n "$f"; done
+
