@@ -162,7 +162,8 @@ def _private(path):
     user = subprocess.run(["whoami"], capture_output=True, text=True, check=True).stdout.strip()
     if not user:
         raise ConnectError("Cannot determine Windows account for private file permissions.")
-    # Remove inherited grants, then grant only the interactive account.
+    # Remove inherited grants, then grant the interactive account. Windows
+    # may retain built-in privileged principals such as SYSTEM/Administrators.
     result = subprocess.run(["icacls", str(path), "/inheritance:r", "/grant:r", user + ":(F)"],
                             capture_output=True, text=True)
     if result.returncode:
@@ -175,10 +176,10 @@ def _write_private(path, data):
     temp = Path(name)
     try:
         with os.fdopen(fd, "wb") as stream:
+            _private(temp)
             stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        _private(temp)
         os.replace(temp, path)
     finally:
         if temp.exists():

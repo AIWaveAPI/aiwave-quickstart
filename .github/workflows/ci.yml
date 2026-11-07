@@ -99,6 +99,22 @@ jobs:
             python -m unittest scripts.test_workbuddy_connect
           '
 
+  workbuddy-windows:
+    name: WorkBuddy private-key install (Windows, Python ${{ matrix.python }})
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Syntax and private-output tests
+        run: |
+          python -m compileall -q scripts
+          python -m unittest scripts.test_workbuddy_connect -v
+
   node-examples:
     name: Node examples (${{ matrix.node }})
     runs-on: ubuntu-latest

@@ -1,6 +1,8 @@
 """Offline tests. Every write targets a temporary directory, never a real profile."""
 
 import json
+import os
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -95,6 +97,41 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), self.original)
         self.assertFalse(self.store.state_path.exists())
         self.assertEqual(len(list(self.path.parent.glob("models.json.aiwave-backup-*"))), 1)
+
+    def test_permission_failure_happens_before_any_secret_is_written(self):
+        inspected_sizes = []
+
+        def refuse_private_path(path):
+            inspected_sizes.append(path.stat().st_size)
+            raise wb.ConnectError("synthetic permission failure")
+
+        with mock.patch.object(wb, "_private", side_effect=refuse_private_path):
+            with self.assertRaises(wb.ConnectError):
+                self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+
+        self.assertEqual(inspected_sizes, [0])
+        self.assertEqual(self.path.read_bytes(), self.original)
+        self.assertFalse(self.store.state_path.exists())
+        self.assertEqual(list(self.path.parent.glob(".aiwave-connect-*")), [])
+        self.assertEqual(list(self.path.parent.glob("models.json.aiwave-backup-*")), [])
+
+    @unittest.skipUnless(os.name == "nt", "Windows ACL check")
+    def test_written_config_and_backups_exclude_other_ordinary_accounts(self):
+        self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+        current_user = subprocess.run(["whoami"], capture_output=True, text=True,
+                                      check=True).stdout.strip().casefold()
+        allowed = {current_user, "nt authority\\system", "builtin\\administrators", "owner rights"}
+        paths = [self.path, self.store.state_path]
+        paths.extend(self.path.parent.glob("models.json.aiwave-backup-*"))
+        self.assertEqual(len(paths), 3)
+        for path in paths:
+            acl = subprocess.run(["icacls", str(path)], capture_output=True, text=True,
+                                 check=True).stdout
+            entries = [line.replace(str(path), "", 1).strip()
+                       for line in acl.splitlines() if ":(" in line]
+            identities = {line.split(":(", 1)[0].casefold() for line in entries}
+            self.assertIn(current_user, identities)
+            self.assertFalse(identities - allowed, f"unexpected ACL on {path.name}: {identities}")
 
     def test_failed_second_install_keeps_existing_undo_state(self):
         self.store.install(["deepseek-v4.1-flash"], "customer-secret")
