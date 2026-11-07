@@ -37,6 +37,10 @@ WHITELIST = {"kling", "seedance", "hailuo", "wan", "qwen3.8", "qwen3.7",
 # made-up ID. Check the whole line, not just the text before the token,
 # because the phrase can sit in a later table column.
 NEGATIVE = re.compile(r"\b(?:there\s+is\s+)?no\s+`?[a-z0-9._-]+`?\s+(?:id|model|route)\b|\bnot\s+on\s+(?:our|the)\s+(?:card|rate\s+card)\b", re.I)
+NEGATIVE_SUFFIX = re.compile(
+    r"\s+(?:(?:id|model|route)\s+)?(?:is\s+)?not\s+on\s+(?:our|the)\s+(?:rate\s+)?card\b",
+    re.I,
+)
 IN_CODE = re.compile(r"`([^`\n]+)`")
 
 SKIP_DIRS = {".git", "node_modules", "build", "dist", "__pycache__", "pkg", "secrets"}
@@ -61,6 +65,14 @@ def looks_like_id(token):
     if t in WHITELIST:
         return False
     return any(t.lower().startswith(p) for p in PREFIXES)
+
+
+def is_negated_id(line, token_match):
+    """Only exempt the ID named by a negative statement, not its whole line."""
+    if any(m.start() <= token_match.start() and token_match.end() <= m.end()
+           for m in NEGATIVE.finditer(line)):
+        return True
+    return bool(NEGATIVE_SUFFIX.match(line[token_match.end():]))
 
 
 def main():
@@ -101,8 +113,7 @@ def main():
                     seen += 1
                     if token in real:
                         continue
-                    prefix = line[:m.start()]
-                    if NEGATIVE.search(line):
+                    if is_negated_id(line, m):
                         continue  # deliberate "there is no `x` ID" statement
                     bad.append((rel, lineno, token, line.strip()[:96]))
 
