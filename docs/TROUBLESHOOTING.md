@@ -57,14 +57,14 @@ Copy the handler instead of writing your own.
 
 ## Video tasks stuck at NOT_START / 0%
 
-Not an HTTP error code, but the most common support question. Some upstream
+Not an HTTP error code. Some upstream
 video channels silently fail when no reference image is supplied: the task is
 accepted (HTTP 200) but never starts, and no error is returned.
 
 **Heuristic:** if a task stays at `NOT_START` with 0% progress for more than
 3 minutes, keep the task ID and check its status or usage before submitting another task. A stalled display alone does not prove failure. See
 [`examples/video_python.py`](../examples/video_python.py), which implements
-this check. A single shot normally takes 5-11 minutes.
+this check. Completion time varies by model and upstream conditions.
 
 ## Still stuck?
 

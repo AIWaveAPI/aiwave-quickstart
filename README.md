@@ -89,11 +89,10 @@ Popular picks (reasoning & chat):
 
 > **Status: experimental.** The video endpoint occasionally surfaces upstream
 > channel errors while we harden it. Try it, but don't build production
-> workflows on it yet. A much better experience — a full cinematic prompt
-> system and storyboard engine — is coming with **AIWave Canvas** (see below).
+> workflows on it yet.
 
 The same key also drives AI video routes — Kling, Seedance, Hailuo, Wan, and
-Vidu. Video routes require a paid account group (from $5).
+Vidu. Video routes require an eligible paid account group.
 
 ```bash
 bash examples/video_curl.sh "A red sports car drifting through a neon city"

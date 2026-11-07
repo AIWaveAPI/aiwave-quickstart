@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """AIWave video generation example: submit a job, poll until done, print the URL.
 
-Video routes are experimental and require a paid account group (from $5).
-Battle-tested notes (from real productions, 2026-10):
-  - A single shot takes 5-11 minutes. Poll every 15s; give up after 15 min.
+Video routes are experimental and require an eligible paid account group.
+Operational notes:
+  - Completion time varies. Poll every 15s; stop this example after 15 min.
   - Some upstream channels stall without a reference image. If a task stays
     NOT_START with 0% progress for >3 minutes, keep its task ID and check
     status or usage before submitting another billable job.
@@ -41,16 +41,23 @@ def main():
         sys.exit("Set AIWAVE_API_KEY first (https://aiwave.live/register)")
 
     print(f"==> Submitting video job ({MODEL})...")
-    resp = req(f"{BASE_URL}/video/generations", {"model": MODEL, "prompt": prompt})
-    task_id = resp.get("task_id") or resp.get("id")
-    if not task_id:
-        sys.exit(f"No task_id in response: {json.dumps(resp)[:300]}")
+    try:
+        resp = req(f"{BASE_URL}/video/generations", {"model": MODEL, "prompt": prompt})
+    except Exception:
+        sys.exit("Submission outcome unknown. Check task history and usage before submitting another paid job.")
+    data = resp.get("data", resp) if isinstance(resp, dict) else None
+    task_id = data.get("task_id") or data.get("id") if isinstance(data, dict) else None
+    if not isinstance(task_id, str) or not task_id:
+        sys.exit("No task ID in submission response. Check task history and usage before submitting another paid job.")
     print(f"    task_id: {task_id}")
 
     not_start_since = None
     for i in range(60):  # 15 min max
         time.sleep(15)
-        status = req(f"{BASE_URL}/video/generations/{task_id}")
+        try:
+            status = req(f"{BASE_URL}/video/generations/{task_id}")
+        except Exception:
+            sys.exit(f"Cannot check task {task_id}. Keep its ID and review status or usage before another submission.")
         data = status.get("data", status)
         st = data.get("status", "?")
         prog = data.get("progress", "")
@@ -76,7 +83,7 @@ def main():
         else:
             not_start_since = None
 
-    sys.exit("Timed out after 15 minutes")
+    sys.exit(f"Task {task_id} was not complete after 15 minutes. Check status and usage before another submission.")
 
 
 if __name__ == "__main__":
