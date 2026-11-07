@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify that every model ID written in our READMEs exists on the live card.
+"""Verify matching backticked model IDs in Markdown against the live card.
 
 A made-up ID in a README is worse than a missing one: a developer copies it,
 gets a 404, and leaves. This checker prevents that, and runs in CI daily
@@ -116,9 +116,10 @@ def main():
         print("\nFix the ID (copy it from /api/pricing), or mark it clearly as")
         print("a negative statement (\"there is no `x` ID\"). Never invent one.")
         return 1
-    print("RESULT: EVERY MODEL ID VERIFIED")
+    print("RESULT: CHECKED MODEL ID MENTIONS VERIFIED")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
