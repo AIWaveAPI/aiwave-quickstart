@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-sync every published catalog number with the live public endpoint.
+"""Re-sync tracked route, family and video counts with the live endpoint.
 
 The catalog drifts (models are added/retired weekly). Hand-editing seven
 files each time is how stale numbers survive. This script finds every claim
@@ -169,3 +169,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
