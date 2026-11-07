@@ -2,7 +2,7 @@
 """Verify matching backticked model IDs in Markdown against the live card.
 
 A made-up ID in a README is worse than a missing one: a developer copies it,
-gets a 404, and leaves. This checker prevents that, and runs in CI daily
+gets a 404, and leaves. This checker catches the matching cases, and runs in CI daily
 alongside verify_claims.py.
 
 Rules:
@@ -15,7 +15,7 @@ Rules:
 
 Usage:
     python3 scripts/verify_model_ids.py --repo-root <root> [--catalog-json PATH]
-Exit code 0 = all IDs real. 1 = at least one made-up ID. 2 = no catalog data.
+Exit code 0 = checked mentions match. 1 = a checked ID is absent. 2 = no catalog data.
 """
 import argparse
 import json

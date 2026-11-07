@@ -2,8 +2,8 @@
 """Re-sync tracked route, family and video counts with the live endpoint.
 
 The catalog drifts (models are added/retired weekly). Hand-editing seven
-files each time is how stale numbers survive. This script finds every claim
-pattern in the repos and rewrites ONLY the number, keeping the surrounding
+files each time is how stale numbers survive. This script finds the defined
+count patterns in the repos and rewrites ONLY the number, keeping the surrounding
 text intact.
 
 Usage:
