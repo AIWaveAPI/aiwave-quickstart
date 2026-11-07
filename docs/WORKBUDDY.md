@@ -81,5 +81,12 @@ use WorkBuddy's model settings UI. Do not edit a damaged JSON file through
 this tool. Report a bug without attaching `models.json`, backups, prompts,
 responses, or API keys.
 
+If the computer loses power between the two installation writes, `verify`,
+`install`, and `undo` may refuse because the saved ownership record no longer
+matches `models.json`. Keep WorkBuddy closed and preserve the private backup.
+Review the two local files before manual recovery; the installer will not
+guess which version to keep. An ordinary configuration write error rolls the
+ownership record back when both files are still unchanged.
+
 WorkBuddy configuration and API behavior: [official model configuration
 guide](https://www.workbuddy.ai/docs/zh/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Model-Configuration).

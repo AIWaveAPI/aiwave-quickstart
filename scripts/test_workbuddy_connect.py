@@ -3,6 +3,7 @@
 import json
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from scripts import workbuddy_connect as wb
@@ -78,6 +79,41 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(undone["removed"], 2)
         self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")),
                          [self.other, {"id": "later", "vendor": "Other", "apiKey": "later-secret"}])
+
+    def test_failed_config_write_restores_previous_installer_state(self):
+        write = wb._write_private
+
+        def fail_config_only(path, data):
+            if path == self.path:
+                raise OSError("simulated config write failure")
+            return write(path, data)
+
+        with mock.patch.object(wb, "_write_private", side_effect=fail_config_only):
+            with self.assertRaises(OSError):
+                self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+
+        self.assertEqual(self.path.read_bytes(), self.original)
+        self.assertFalse(self.store.state_path.exists())
+        self.assertEqual(len(list(self.path.parent.glob("models.json.aiwave-backup-*"))), 1)
+
+    def test_failed_second_install_keeps_existing_undo_state(self):
+        self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+        before_config = self.path.read_bytes()
+        before_state = self.store.state_path.read_bytes()
+        write = wb._write_private
+
+        def fail_config_only(path, data):
+            if path == self.path:
+                raise OSError("simulated config write failure")
+            return write(path, data)
+
+        with mock.patch.object(wb, "_write_private", side_effect=fail_config_only):
+            with self.assertRaises(OSError):
+                self.store.install(["deepseek-v4-pro"], "customer-secret")
+
+        self.assertEqual(self.path.read_bytes(), before_config)
+        self.assertEqual(self.store.state_path.read_bytes(), before_state)
+        self.assertEqual(self.store.undo()["removed"], 1)
 
     def test_repeat_install_is_idempotent(self):
         ids = wb.select_model_ids(catalog(), None, False)

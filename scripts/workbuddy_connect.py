@@ -285,10 +285,23 @@ class ConfigStore:
                      "owned": owned, "last_backup": str(backup) if backup else None,
                      "updated_utc": utc_now()}
         # State first: a crash between writes is detectable and never silently adopts entries.
-        _write_private(self.state_path, _json_bytes(new_state))
-        if _read_regular(self.path) != before:
-            raise ConnectError("WorkBuddy configuration changed during install; review backup before retrying.")
-        _write_private(self.path, _json_bytes(entries + additions))
+        previous_state = _read_regular(self.state_path)
+        written_state = _json_bytes(new_state)
+        _write_private(self.state_path, written_state)
+        try:
+            if _read_regular(self.path) != before:
+                raise ConnectError("WorkBuddy configuration changed during install; review backup before retrying.")
+            _write_private(self.path, _json_bytes(entries + additions))
+        except (ConnectError, OSError):
+            # On a normal write failure, restore the old state only if neither
+            # config nor state has changed since our write. A crash still leaves
+            # the new state in place so a later run fails closed.
+            if _read_regular(self.path) == before and _read_regular(self.state_path) == written_state:
+                if previous_state is None:
+                    self.state_path.unlink()
+                else:
+                    _write_private(self.state_path, previous_state)
+            raise
         return {"added": len(additions), "backup": str(backup) if backup else None}
 
     def verify(self):
