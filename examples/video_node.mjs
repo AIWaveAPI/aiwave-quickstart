@@ -2,12 +2,10 @@
 /**
  * AIWave video generation example: submit a job, poll until done, print the URL.
  *
- * Video routes are experimental and require a paid account group (from $5).
- * Battle-tested notes (from real productions, 2026-10):
- *   - A single shot takes 5-11 minutes. Poll every 15s; give up after 15 min.
- *   - Some upstream channels stall without a reference image. If a task
- *     stays NOT_START with 0% progress for >3 minutes, keep its task ID and
- *     check status or usage before submitting another billable job.
+ * Video routes are experimental; model and account-group eligibility varies.
+ * This example polls every 15 seconds and stops after 15 minutes. Completion
+ * time varies by route. If the task remains at NOT_START with 0% progress,
+ * keep its task ID and check status or usage before another paid submission.
  *
  * Usage:
  *   export AIWAVE_API_KEY="sk-..."   # https://aiwave.live/register

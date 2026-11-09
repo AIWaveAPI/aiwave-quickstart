@@ -29,7 +29,9 @@ Common searches and the exact IDs on our card (a lookup table, not a review):
 | `kling` / `seedance` / `wan` video | `kling-v3`, `kling-video-o1`, `doubao-seedance-2-5-260628`, `wan3.0-video` |
 | `chinese ai api pricing 2026` | [Dated USD rates](https://aiwave.live/pricing) · `python3 scripts/cost.py --compare <ids>` |
 
-Every number in this repo is checked against that endpoint by CI daily.
+The scheduled checker covers selected catalog counts and tracked model IDs.
+Confirm the current rate and account-group access on the live pricing page
+before sending a paid request; the checker does not audit every number here.
 
 ## 1. Set your environment
 
@@ -72,8 +74,8 @@ node examples/node.mjs
 
 Use the public model list at [aiwave.live/models](https://aiwave.live/models)
 and the dated rate card at [aiwave.live/pricing](https://aiwave.live/pricing).
-Model IDs are explicit, so you can change the model without changing the
-request shape.
+Model IDs are explicit. Reuse the chat request shape only after checking that
+the selected route supports that endpoint and the features your app needs.
 
 Popular picks (reasoning & chat):
 
@@ -89,11 +91,11 @@ Popular picks (reasoning & chat):
 
 > **Status: experimental.** The video endpoint occasionally surfaces upstream
 > channel errors while we harden it. Try it, but don't build production
-> workflows on it yet. A much better experience — a full cinematic prompt
-> system and storyboard engine — is coming with **AIWave Canvas** (see below).
+> workflows on it yet. Keep task IDs and reconcile usage before resubmitting
+> an uncertain paid operation.
 
-The same key also drives AI video routes — Kling, Seedance, Hailuo, Wan, and
-Vidu. Video routes require a paid account group (from $5).
+The same key can access eligible AI video routes — Kling, Seedance, Hailuo,
+Wan, and Vidu. Check the exact model and account-group eligibility before use.
 
 ```bash
 bash examples/video_curl.sh "A red sports car drifting through a neon city"
@@ -120,7 +122,7 @@ decision table in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 - `404`: model ID not found or retired — the handler suggests the closest ID from the live catalog.
 - `429`: **use the `Retry-After` header**, then bounded exponential backoff with jitter.
 - `5xx`: keep the request id, retry only when the operation is safe to repeat.
-- Video tasks stuck at `NOT_START 0%` for >3 min: keep the task ID and check status or usage before resubmitting — see the troubleshooting doc.
+- Video tasks with an uncertain terminal state: keep the task ID and check status or usage before resubmitting — see the troubleshooting doc.
 
 ## 8. Estimate your cost
 
