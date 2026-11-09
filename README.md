@@ -79,6 +79,10 @@ the selected route supports that endpoint and the features your app needs.
 
 Popular picks (reasoning & chat):
 
+The numeric rates in this table are checked against the live `/api/pricing`
+card in CI. Other price references are outside that check; use the dated
+[pricing page](https://aiwave.live/pricing) before estimating a purchase.
+
 | Model | Best for | Rate |
 |---|---|---|
 | `deepseek-v4-flash` | Fast, cheap reasoning | $0.30 / $1.20 per 1M |

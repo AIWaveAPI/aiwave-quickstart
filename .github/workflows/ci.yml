@@ -50,6 +50,12 @@ jobs:
       - name: Check backticked known-prefix model IDs in Markdown
         # This checks matching backticked IDs, not arbitrary prose or runtime routes.
         run: python3 repos/aiwave-quickstart/scripts/verify_model_ids.py --repo-root repos
+      - name: Check numeric Popular picks README rates against live card
+        # Scope: this README table only; do not claim a whole-repo price audit.
+        run: |
+          cd repos/aiwave-quickstart
+          python3 scripts/verify_readme_prices.py
+          python3 -m unittest scripts.test_readme_prices
       - name: Model-ID negative-statement regression
         run: cd repos/aiwave-quickstart && python3 -m unittest scripts.test_model_ids
       - name: Cost estimator smoke test
