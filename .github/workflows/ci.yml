@@ -6,7 +6,7 @@ on:
   pull_request:
   schedule:
     # Daily drift check: tracked route/family/video counts vs the live endpoint,
-    # across ALL repos in the org (not just this one).
+    # across the six selected developer-facing repos checked out below.
     - cron: "17 6 * * *"
 
 permissions:
@@ -14,10 +14,10 @@ permissions:
 
 jobs:
   claims:
-    name: Verify tracked catalog counts and README model IDs (all repos)
+    name: Verify tracked catalog counts and README model IDs (selected repos)
     runs-on: ubuntu-latest
     steps:
-      - name: Check out all AIWaveAPI repos into one tree
+      - name: Check out selected AIWaveAPI repos into one tree
         uses: actions/checkout@v4
         with:
           path: repos/aiwave-quickstart

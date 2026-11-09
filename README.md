@@ -144,18 +144,20 @@ reproducible. Misspelled model IDs get a suggestion from the live catalog.
 
 ## 8b. Continuous verification
 
-Every push runs [CI](.github/workflows/ci.yml): Python 3.8/3.10/3.12 and
-Node 18/20 syntax checks, offline tests, and a live check that the numbers
-in **every AIWaveAPI repo** still match the public pricing endpoint. CI also
-runs daily, so catalog drift is caught without a commit.
+Main-branch pushes and pull requests run [CI](.github/workflows/ci.yml): Python
+3.8/3.10/3.12 and Node 18/20 syntax checks and offline tests. A scheduled
+live-catalog check also runs daily across six selected developer-facing
+repositories. The live check covers tracked
+route/family/video counts and matching backticked model IDs. It does not audit
+every price, account-group route, or repository in the organization.
 
-Model catalogs drift. When the checker turns red it prints the exact
-`file:line` and the correct value; fix all of them in one command instead of
-hand-editing seven files:
+Model catalogs drift. For a tracked count mismatch, the checker prints the
+`file:line` and the current count. Use the sync command to propose count
+updates, then review the diff. Model-ID findings require separate review:
 
 ```bash
-python3 scripts/sync_claims.py --repo-root <path-to-all-repos>   # rewrites only the numbers
-python3 scripts/verify_claims.py --repo-root <path-to-all-repos>  # must print ALL CLAIMS VERIFIED
+python3 scripts/sync_claims.py --repo-root <path-to-selected-repos>   # proposes tracked count updates
+python3 scripts/verify_claims.py --repo-root <path-to-selected-repos>  # verifies tracked counts only
 git diff                                                        # review before committing
 ```
 
