@@ -1,7 +1,13 @@
 import OpenAI from "openai";
 
+const apiKey = process.env.AIWAVE_API_KEY;
+if (!apiKey?.trim()) {
+  console.error("Set AIWAVE_API_KEY to your own AIWave key before running this example.");
+  process.exit(2);
+}
+
 const client = new OpenAI({
-  apiKey: process.env.AIWAVE_API_KEY,
+  apiKey,
   baseURL: process.env.AIWAVE_BASE_URL || "https://aiwave.live/v1",
 });
 

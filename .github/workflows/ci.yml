@@ -144,6 +144,8 @@ jobs:
           for f in "${files[@]}"; do node --check "$f"; done
       - name: Error-handler branches behave as documented (offline)
         run: node scripts/test_error_handlers.mjs
+      - name: Quickstart never uses an ambient OpenAI key (offline)
+        run: node scripts/test_node_key_isolation.mjs
       - name: Shell examples are valid
         run: |
           shopt -s nullglob
