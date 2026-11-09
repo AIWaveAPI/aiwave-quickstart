@@ -48,6 +48,48 @@ class VideoExampleTests(unittest.TestCase):
         self.assertIn("Check task history and usage", result.stderr)
         self.assertNotIn("synthetic-private-marker", result.stdout + result.stderr)
 
+    def test_polling_encodes_opaque_task_id(self):
+        requests = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def respond(self, body):
+                raw = json.dumps(body).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+
+            def do_POST(self):
+                requests.append(("POST", self.path))
+                self.respond({"data": {"task_id": "job/part?mode=unsafe#fragment",
+                                       "status": "IN_PROGRESS"}})
+
+            def do_GET(self):
+                requests.append(("GET", self.path))
+                self.respond({"data": {"status": "SUCCESS", "progress": "100%"}})
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), Handler)
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            env = dict(os.environ, AIWAVE_API_KEY="synthetic-only",
+                       AIWAVE_BASE_URL=f"http://127.0.0.1:{server.server_port}/v1")
+            result = subprocess.run([sys.executable, str(SCRIPT), "synthetic prompt"],
+                                    env=env, capture_output=True, text=True, timeout=20)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(requests, [
+            ("POST", "/v1/video/generations"),
+            ("GET", "/v1/video/generations/job%2Fpart%3Fmode%3Dunsafe%23fragment"),
+        ])
+
 
 if __name__ == "__main__":
     unittest.main()

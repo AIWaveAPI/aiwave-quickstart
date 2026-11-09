@@ -17,6 +17,7 @@ import os
 import sys
 import time
 import urllib.request
+from urllib.parse import quote
 
 BASE_URL = os.environ.get("AIWAVE_BASE_URL", "https://aiwave.live/v1")
 MODEL = os.environ.get("AIWAVE_VIDEO_MODEL", "kling-v2-6")
@@ -55,7 +56,7 @@ def main():
     for i in range(60):  # 15 min max
         time.sleep(15)
         try:
-            status = req(f"{BASE_URL}/video/generations/{task_id}")
+            status = req(f"{BASE_URL}/video/generations/{quote(task_id, safe='')}")
         except Exception:
             sys.exit(f"Cannot check task {task_id}. Keep its ID and review status or usage before another submission.")
         data = status.get("data", status)

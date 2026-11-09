@@ -63,7 +63,7 @@ async function main() {
     await sleep(15000);
     let status;
     try {
-      status = await call(`/video/generations/${taskId}`);
+      status = await call(`/video/generations/${encodeURIComponent(taskId)}`);
     } catch {
       console.error(`Cannot check task ${taskId}. Keep its ID and review status or usage before another submission.`);
       process.exit(1);
