@@ -49,7 +49,9 @@ jobs:
         # 404, and leave. This catches invented IDs before they ship.
         run: python3 repos/aiwave-quickstart/scripts/verify_model_ids.py --repo-root repos
       - name: Cost estimator smoke test
-        run: python3 repos/aiwave-quickstart/scripts/cost.py --preset chat --model deepseek-v4-flash
+        run: |
+          python3 repos/aiwave-quickstart/scripts/cost.py --preset chat --model deepseek-v4-flash
+          cd repos/aiwave-quickstart && python3 -m unittest scripts.test_cost
       - name: All scripts compile
         run: python3 -m py_compile repos/aiwave-quickstart/scripts/*.py
       - name: verify/sync tools agree (offline, anti-loop guarantee)
@@ -73,6 +75,8 @@ jobs:
         run: python3 scripts/test_error_handlers.py
       - name: Claims tools stay in sync (offline)
         run: python3 scripts/test_claims_tools.py
+      - name: Cost estimator rejects misleading quotes (offline)
+        run: python3 -m unittest scripts.test_cost
       - name: Provider setup write/restore path (offline)
         if: matrix.python == '3.12'
         run: |
@@ -94,6 +98,7 @@ jobs:
             python -m compileall -q examples scripts
             python scripts/test_error_handlers.py
             python scripts/test_claims_tools.py
+            python -m unittest scripts.test_cost
           '
 
   node-examples:

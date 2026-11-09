@@ -136,11 +136,16 @@ python3 scripts/cost.py --model deepseek-v4-flash --messages 500 \
 python3 scripts/cost.py --compare glm-5,kimi-k3,deepseek-v4-pro --preset agent
 
 # Video routes are billed per clip
-python3 scripts/cost.py --preset video --model kling-v2-6 --clips 30
+python3 scripts/cost.py --preset video --model kling-v2-6 --group "Visual Team" --clips 30
 ```
 
-Every run prints the fetch time and the pricing version, so results are
-reproducible. Misspelled model IDs get a suggestion from the live catalog.
+Every run prints the fetch time, pricing version and selected account group.
+The estimator refuses to quote a model that is not listed for that group or
+whose group multiplier is not published. The video preset uses 10 clips per day
+unless `--clips` is supplied. Per-call figures use the published base rate;
+request-specific duration, mode or other multipliers may change the final
+charge. Reconcile an actual request in Console before budgeting. A catalog
+entry is not proof that the route is healthy for your key.
 
 ## 8b. Continuous verification
 
