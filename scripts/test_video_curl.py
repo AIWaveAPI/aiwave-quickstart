@@ -25,7 +25,8 @@ with tempfile.TemporaryDirectory() as td:
         "if '--data-binary' in a:\n"
         "  Path(os.environ['CAPTURE_PAYLOAD']).write_text(a[a.index('--data-binary')+1])\n"
         "  if os.environ.get('FAIL_SUBMIT'): sys.exit(22)\n"
-        "  print(json.dumps({'data':{'task_id':os.environ.get('FAKE_TASK_ID','task-123')}}))\n"
+        "  task={'task_id':os.environ.get('FAKE_TASK_ID','task-123')}\n"
+        "  print(json.dumps({'data':task} if os.environ.get('FAKE_NESTED') else task))\n"
         "else:\n"
         "  Path(os.environ['CAPTURE_GET']).write_text(next(x for x in a if x.startswith('https://')))\n"
         "  print(json.dumps({'data':{'status':'SUCCESS','progress':'100%','url':'https://example.test/result.mp4'}}))\n"
@@ -46,6 +47,7 @@ with tempfile.TemporaryDirectory() as td:
 
     (root / "calls").unlink()
     env["FAKE_TASK_ID"] = "job/part?mode=unsafe#fragment"
+    env["FAKE_NESTED"] = "1"
     encoded = subprocess.run(["bash", str(script), prompt], env=env, text=True,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert encoded.returncode == 0, (encoded.stdout, encoded.stderr)
