@@ -25,21 +25,35 @@ with tempfile.TemporaryDirectory() as td:
         "if '--data-binary' in a:\n"
         "  Path(os.environ['CAPTURE_PAYLOAD']).write_text(a[a.index('--data-binary')+1])\n"
         "  if os.environ.get('FAIL_SUBMIT'): sys.exit(22)\n"
-        "  print(json.dumps({'task_id':'task-123'}))\n"
-        "else: print(json.dumps({'data':{'status':'SUCCESS','progress':'100%','url':'https://example.test/result.mp4'}}))\n"
+        "  print(json.dumps({'data':{'task_id':os.environ.get('FAKE_TASK_ID','task-123')}}))\n"
+        "else:\n"
+        "  Path(os.environ['CAPTURE_GET']).write_text(next(x for x in a if x.startswith('https://')))\n"
+        "  print(json.dumps({'data':{'status':'SUCCESS','progress':'100%','url':'https://example.test/result.mp4'}}))\n"
     )
     fake_sleep.write_text("#!/bin/sh\nexit 0\n")
     fake_curl.chmod(0o755)
     fake_sleep.chmod(0o755)
     env = dict(os.environ, PATH=str(root) + os.pathsep + os.environ["PATH"],
                AIWAVE_API_KEY="synthetic-key", CALLS=str(root / "calls"),
-               CAPTURE_PAYLOAD=str(root / "payload"))
+               CAPTURE_PAYLOAD=str(root / "payload"), CAPTURE_GET=str(root / "get-url"))
     result = subprocess.run(["bash", str(script), prompt], env=env, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert result.returncode == 0, (result.stdout, result.stderr)
     assert json.loads((root / "payload").read_text())["prompt"] == prompt
     assert (root / "calls").read_text().splitlines() == ["POST", "GET"]
     assert "task-123" in result.stdout and "result.mp4" in result.stdout
+    assert (root / "get-url").read_text() == "https://aiwave.live/v1/video/generations/task-123"
+
+    (root / "calls").unlink()
+    env["FAKE_TASK_ID"] = "job/part?mode=unsafe#fragment"
+    encoded = subprocess.run(["bash", str(script), prompt], env=env, text=True,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert encoded.returncode == 0, (encoded.stdout, encoded.stderr)
+    assert (root / "calls").read_text().splitlines() == ["POST", "GET"]
+    assert (root / "get-url").read_text() == (
+        "https://aiwave.live/v1/video/generations/"
+        "job%2Fpart%3Fmode%3Dunsafe%23fragment"
+    )
 
     (root / "calls").unlink()
     env["FAIL_SUBMIT"] = "1"
