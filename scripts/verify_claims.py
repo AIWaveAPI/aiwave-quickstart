@@ -73,7 +73,7 @@ def live_numbers(data):
              if any(k in (m.get("model_name") or m.get("id") or "").lower()
                     for k in VIDEO_MARKERS)]
     return {"routes": len(models), "families": len(families), "video": len(video),
-            "pricing_version": str(models[0].get("pricing_version", "?"))[:16] if models else "?"}
+            "pricing_version": str(data.get("pricing_version") or "?")[:16]}
 
 
 def iter_files(root):
