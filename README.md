@@ -109,10 +109,11 @@ Full list of video models: [aiwave.live/models](https://aiwave.live/models).
 
 ## 6. Prompt library sample
 
-**[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack)** —
-four bilingual video-prompt modules (three cinematic styles + one camera
-move), each with a validation record and a reproduction command. Free (CC
-BY-NC). Works with any video model.
+**[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack)** has
+four bilingual video-prompt starting points. The author-reported single runs
+do not have public clips or task receipts, so the visual effects are not
+independently validated. Check model eligibility and the
+[CC BY-NC terms](https://creativecommons.org/licenses/by-nc/4.0/) before use.
 
 ## 7. Handle the common responses
 
@@ -124,7 +125,9 @@ decision table in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 - `401`: check that the key is present and the `Bearer` prefix is included.
 - `402`: add balance or use an enabled account group with available quota.
 - `404`: model ID not found or retired — the handler suggests the closest ID from the live catalog.
-- `429`: **use the `Retry-After` header**, then bounded exponential backoff with jitter.
+- `429`: for the chat example, use `Retry-After` with bounded backoff. For a
+  potentially billable video submission, inspect task history and usage before
+  any new POST.
 - `5xx`: keep the request id, retry only when the operation is safe to repeat.
 - Video tasks with an uncertain terminal state: keep the task ID and check status or usage before resubmitting — see the troubleshooting doc.
 
@@ -154,8 +157,9 @@ Main-branch pushes and pull requests run [CI](.github/workflows/ci.yml): Python
 3.8/3.10/3.12 and Node 18/20 syntax checks and offline tests. A scheduled
 live-catalog check also runs daily across six selected developer-facing
 repositories. The live check covers tracked
-route/family/video counts and matching backticked model IDs. It does not audit
-every price, account-group route, or repository in the organization.
+route/family/video counts, matching backticked model IDs, and the three numeric
+Popular picks rates in this README. It does not audit every price,
+account-group route, or repository in the organization.
 
 Model catalogs drift. For a tracked count mismatch, the checker prints the
 `file:line` and the current count. Use the sync command to propose count

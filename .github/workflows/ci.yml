@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   claims:
-    name: Verify tracked catalog counts and README model IDs (selected repos)
+    name: Verify selected catalog counts, model IDs and README rates
     runs-on: ubuntu-latest
     steps:
       - name: Check out selected AIWaveAPI repos into one tree
