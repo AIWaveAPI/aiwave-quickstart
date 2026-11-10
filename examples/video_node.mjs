@@ -41,10 +41,17 @@ async function call(path, body) {
 
 async function main() {
   console.log(`==> Submitting video job (${MODEL})...`);
-  const submitted = await call("/video/generations", { model: MODEL, prompt });
-  const taskId = submitted.task_id || submitted.id;
-  if (!taskId) {
-    console.error("No task_id in response:", JSON.stringify(submitted).slice(0, 300));
+  let submitted;
+  try {
+    submitted = await call("/video/generations", { model: MODEL, prompt });
+  } catch {
+    console.error("Submission outcome unknown. Check task history and usage before submitting another paid job.");
+    process.exit(1);
+  }
+  const data = submitted?.data ?? submitted;
+  const taskId = data?.task_id ?? data?.id;
+  if (typeof taskId !== "string" || !taskId) {
+    console.error("No task ID in submission response. Check task history and usage before submitting another paid job.");
     process.exit(1);
   }
   console.log(`    task_id: ${taskId}`);
@@ -52,7 +59,13 @@ async function main() {
   let notStartSince = null;
   for (let i = 1; i <= 60; i++) {
     await sleep(15000);
-    const status = await call(`/video/generations/${taskId}`);
+    let status;
+    try {
+      status = await call(`/video/generations/${encodeURIComponent(taskId)}`);
+    } catch {
+      console.error(`Cannot check task ${taskId}. Keep its ID and review status or usage before another submission.`);
+      process.exit(1);
+    }
     const data = status.data || status;
     const st = data.status || "?";
     const prog = data.progress || "";
@@ -82,7 +95,7 @@ async function main() {
       notStartSince = null;
     }
   }
-  console.error("Timed out after 15 minutes");
+  console.error(`Task ${taskId} was not complete after 15 minutes. Check status and usage before another submission.`);
   process.exit(1);
 }
 

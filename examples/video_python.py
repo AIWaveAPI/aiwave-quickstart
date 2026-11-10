@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import urllib.request
+from urllib.parse import quote
 
 BASE_URL = os.environ.get("AIWAVE_BASE_URL", "https://aiwave.live/v1")
 MODEL = os.environ.get("AIWAVE_VIDEO_MODEL", "kling-v2-6")
@@ -39,16 +40,23 @@ def main():
         sys.exit("Set AIWAVE_API_KEY first (https://aiwave.live/register)")
 
     print(f"==> Submitting video job ({MODEL})...")
-    resp = req(f"{BASE_URL}/video/generations", {"model": MODEL, "prompt": prompt})
-    task_id = resp.get("task_id") or resp.get("id")
-    if not task_id:
-        sys.exit(f"No task_id in response: {json.dumps(resp)[:300]}")
+    try:
+        resp = req(f"{BASE_URL}/video/generations", {"model": MODEL, "prompt": prompt})
+    except Exception:
+        sys.exit("Submission outcome unknown. Check task history and usage before submitting another paid job.")
+    data = resp.get("data", resp) if isinstance(resp, dict) else None
+    task_id = data.get("task_id") or data.get("id") if isinstance(data, dict) else None
+    if not isinstance(task_id, str) or not task_id:
+        sys.exit("No task ID in submission response. Check task history and usage before submitting another paid job.")
     print(f"    task_id: {task_id}")
 
     not_start_since = None
     for i in range(60):  # 15 min max
         time.sleep(15)
-        status = req(f"{BASE_URL}/video/generations/{task_id}")
+        try:
+            status = req(f"{BASE_URL}/video/generations/{quote(task_id, safe='')}")
+        except Exception:
+            sys.exit(f"Cannot check task {task_id}. Keep its ID and review status or usage before another submission.")
         data = status.get("data", status)
         st = data.get("status", "?")
         prog = data.get("progress", "")
@@ -74,7 +82,7 @@ def main():
         else:
             not_start_since = None
 
-    sys.exit("Timed out after 15 minutes")
+    sys.exit(f"Task {task_id} was not complete after 15 minutes. Check status and usage before another submission.")
 
 
 if __name__ == "__main__":

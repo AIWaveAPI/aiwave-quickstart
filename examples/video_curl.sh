@@ -21,7 +21,7 @@ if ! RESP=$(curl --silent --show-error --fail-with-body --max-time 120 \
   exit 1
 fi
 
-if ! TASK_ID=$(printf '%s' "$RESP" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("task_id") or d.get("id") or "")'); then
+if ! TASK_ID=$(printf '%s' "$RESP" | python3 -c 'import json,sys; d=json.load(sys.stdin); d=d.get("data",d) if isinstance(d,dict) else None; x=d.get("task_id") or d.get("id") if isinstance(d,dict) else None; print(x if isinstance(x,str) else "")'); then
   echo "!! Invalid submission response. Check usage or task history before resubmitting." >&2
   exit 1
 fi
@@ -29,13 +29,14 @@ if [ -z "$TASK_ID" ]; then
   echo "!! No task ID in submission response. Check usage or task history before resubmitting." >&2
   exit 1
 fi
+TASK_PATH=$(python3 -c 'from urllib.parse import quote; import sys; print(quote(sys.argv[1], safe=""))' "$TASK_ID")
 
 echo "==> Task ID: $TASK_ID"
 echo "==> Polling every 15s, up to 15 min..."
 for i in $(seq 1 60); do
   sleep 15
   if ! STATUS=$(curl --silent --show-error --fail-with-body --max-time 30 \
-    "$BASE_URL/video/generations/$TASK_ID" \
+    "$BASE_URL/video/generations/$TASK_PATH" \
     -H "Authorization: Bearer $AIWAVE_API_KEY"); then
     echo "!! Status lookup failed. Keep task ID $TASK_ID and retry the GET later." >&2
     exit 1
