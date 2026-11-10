@@ -15,7 +15,7 @@ Safety:
   - Never prints configuration secrets
 
 Usage:
-    export AIWAVE_API_KEY="sk-..."
+    read -r -s -p "AIWave API key: " AIWAVE_API_KEY; printf '\\n'; export AIWAVE_API_KEY
     python3 scripts/aiwave-setup.py --dry-run
     python3 scripts/aiwave-setup.py
     python3 scripts/aiwave-setup.py --restore
