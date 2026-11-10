@@ -39,15 +39,27 @@ before sending a paid request; the checker does not audit every number here.
 
 ## 1. Set your environment
 
-Create a key in the [AIWave console](https://aiwave.live/register), then export it locally:
+Create your own key in the [AIWave console](https://aiwave.live/register). Load it into this shell without putting the key in command history:
+
+**Bash**
 
 ```bash
-export AIWAVE_API_KEY="your_api_key"
+read -r -s -p "AIWave API key: " AIWAVE_API_KEY; printf '\n'; export AIWAVE_API_KEY
 export AIWAVE_BASE_URL="https://aiwave.live/v1"
 export AIWAVE_MODEL="deepseek-v4-flash"
 ```
 
-The key belongs in your environment or secret manager. Do not commit it.
+**Windows PowerShell 5.1 or 7**
+
+```powershell
+$secret = Read-Host "AIWave API key" -AsSecureString
+$env:AIWAVE_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+$env:AIWAVE_BASE_URL = "https://aiwave.live/v1"
+$env:AIWAVE_MODEL = "deepseek-v4-flash"
+Remove-Variable secret
+```
+
+The key lives in this process environment for the following examples. Do not commit or paste it into an issue. When finished, run `unset AIWAVE_API_KEY` in Bash or `Remove-Item Env:AIWAVE_API_KEY` in PowerShell.
 
 ## 2. Make the first request
 
@@ -58,6 +70,13 @@ curl "$AIWAVE_BASE_URL/chat/completions" \
   -H "Authorization: Bearer $AIWAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{\"model\":\"$AIWAVE_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"max_tokens\":64}"
+```
+
+### Windows PowerShell
+
+```powershell
+$body = @{ model = $env:AIWAVE_MODEL; messages = @(@{ role = "user"; content = "Say hello in one sentence." }); max_tokens = 64 } | ConvertTo-Json -Depth 4
+Invoke-RestMethod -Uri "$env:AIWAVE_BASE_URL/chat/completions" -Method Post -Headers @{ Authorization = "Bearer $env:AIWAVE_API_KEY" } -ContentType "application/json; charset=utf-8" -Body $body
 ```
 
 ### Python
@@ -200,7 +219,7 @@ retains a private backup of the original file, and refuses to overwrite edits
 made after setup.
 
 ```bash
-export AIWAVE_API_KEY="sk-..."                    # your own key
+read -r -s -p "AIWave API key: " AIWAVE_API_KEY; printf '\n'; export AIWAVE_API_KEY
 python3 scripts/aiwave-setup.py --dry-run        # preview, writes nothing
 python3 scripts/aiwave-setup.py                  # configure Claude Code
 python3 scripts/aiwave-setup.py --restore        # restore if unchanged since setup
