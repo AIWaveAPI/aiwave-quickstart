@@ -59,16 +59,27 @@ def main():
     ]}
     vn, sn = v.live_numbers(fixture), s.live_numbers(fixture)
     check(vn == sn, "both tools compute identical live numbers")
-    check(vn["routes"] == 4 and vn["families"] == 3 and vn["video"] == 1,
+    check(vn["listed_ids"] == 4 and vn["families"] == 3 and vn["video"] == 1,
           f"fixture math correct: {vn}")
     check(vn["pricing_version"] == "current-catalog",
           "report the response catalog version, not a model row version")
 
-    live = {"routes": 4, "families": 3, "video": 1}
+    duplicate = {"models": [{"model_name": "same"}, {"model_name": "same"}]}
+    for tool in (v, s):
+        for invalid in (duplicate, [], {"models": [{}]}):
+            try:
+                tool.live_numbers(invalid)
+            except ValueError:
+                pass
+            else:
+                check(False, "invalid catalog input must be refused")
+    check(True, "duplicate, malformed and empty catalog inputs are refused")
+
+    live = {"listed_ids": 4, "families": 3, "video": 1}
     with tempfile.TemporaryDirectory() as td:
         path = Path(td) / "README.md"
-        stale = ("We offer **9 public routes** and **3 public video routes**.\n"
-                 "Badge: routes-3-purple\n")
+        stale = ("The public rate card lists **9 model IDs on the public rate card** and **3 video IDs on the public rate card**.\n"
+                 "Badge: video%20IDs-3-purple\n")
         path.write_text(stale, encoding="utf-8")
 
         # 3. verify detects all three stale numbers.
@@ -78,10 +89,11 @@ def main():
         # 4. sync rewrites each of them, and nothing else.
         fixed_lines = [s.replace_line(line, live)[0] for line in stale.splitlines()]
         fixed = "\n".join(fixed_lines)
-        check("4 public routes" in fixed, "sync rewrites routes 9 -> 4")
-        check("1 public video routes" in fixed, "sync rewrites video 3 -> 1")
-        check("routes-1-purple" in fixed, "sync rewrites badge 3 -> 1")
-        check("**" in fixed and "We offer" in fixed, "sync preserves surrounding text")
+        check("4 model IDs on the public rate card" in fixed, "sync rewrites listed IDs 9 -> 4")
+        check("1 video IDs on the public rate card" in fixed, "sync rewrites video IDs 3 -> 1")
+        check("video%20IDs-1-purple" in fixed, "sync rewrites badge 3 -> 1")
+        check("**" in fixed and "The public rate card lists" in fixed,
+              "sync preserves surrounding text")
 
         # 5. After sync, verify is clean (the anti-loop guarantee).
         check(not mismatches(fixed, live), "post-sync verification is clean")
