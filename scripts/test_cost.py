@@ -86,6 +86,19 @@ class CostSafetyTests(unittest.TestCase):
         self.assertNotEqual(cost.fmt(0.000000001), "$0.0000")
         self.assertIn("e-", cost.fmt(0.000000001))
 
+    def test_duplicate_model_id_fails_closed_before_quoting(self):
+        catalog = {**CATALOG, "data": [
+            CATALOG["data"][0],
+            {**CATALOG["data"][0], "model_ratio": 9.99},
+        ]}
+        with self.assertRaisesRegex(SystemExit, "duplicate model ID"):
+            self.run_cli("--model", "deepseek-v4-flash", catalog=catalog)
+
+    def test_malformed_model_row_fails_closed_before_quoting(self):
+        catalog = {**CATALOG, "data": [CATALOG["data"][0], None]}
+        with self.assertRaisesRegex(SystemExit, "invalid model row"):
+            self.run_cli("--model", "deepseek-v4-flash", catalog=catalog)
+
 
 if __name__ == "__main__":
     unittest.main()
