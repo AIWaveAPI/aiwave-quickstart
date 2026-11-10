@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-sync tracked route, family and video counts with the live endpoint.
+"""Re-sync tracked catalog-ID, family and video counts with the live endpoint.
 
 The catalog drifts (models are added/retired weekly). Hand-editing seven
 files each time is how stale numbers survive. This script finds the defined
@@ -28,11 +28,12 @@ VIDEO_MARKERS = ["kling", "seedance", "hailuo", "wan3.0-video", "vidu"]
 
 # (compiled pattern, group holding the number, key). Must mirror verify_claims.py.
 PATTERNS = [
-    (re.compile(r"(\d+)\s+routes?\s+(?:on|in)\s+the\s+public\s+rate\s+card"), 1, "routes"),
-    (re.compile(r"(\d+)\s+public\s+routes"), 1, "routes"),
-    (re.compile(r"(\d+)\s+AI\s+routes"), 1, "routes"),
+    (re.compile(r"(\d+)\s+model\s+IDs\s+on\s+the\s+public\s+rate\s+card"), 1, "listed_ids"),
+    (re.compile(r"model(?:%20|[-\s])IDs-(\d+)-"), 1, "listed_ids"),
     (re.compile(r"(\d+)\s+Chinese\s+(?:AI\s+|model\s+)?families"), 1, "families"),
     (re.compile(r"(\d+)\s+families"), 1, "families"),
+    (re.compile(r"(\d+)\s+video\s+IDs\s+on\s+the\s+public\s+rate\s+card"), 1, "video"),
+    (re.compile(r"video(?:%20|[-\s])IDs-(\d+)-"), 1, "video"),
     (re.compile(r"(\d+)\s+(?:public\s+)?video[-\s](?:generation\s+)?routes"), 1, "video"),
     (re.compile(r"(?:video(?:%20|[-\s]))?routes?-(\d+)-"), 1, "video"),
     (re.compile(r"families\s*\+\s*(\d+)\s+video"), 1, "video"),
@@ -59,18 +60,31 @@ def load_catalog(path):
 
 
 def live_numbers(data):
+    if not isinstance(data, dict):
+        raise ValueError("catalog response is not an object")
     models = data.get("models") or data.get("data") or []
+    if not isinstance(models, list) or not models:
+        raise ValueError("catalog has no model-ID list")
+    names = []
+    for model in models:
+        if not isinstance(model, dict):
+            raise ValueError("catalog contains a non-model row")
+        name = model.get("model_name") or model.get("id")
+        if not isinstance(name, str) or not name:
+            raise ValueError("catalog contains a row without a model ID")
+        names.append(name)
+    if len(names) != len(set(names)):
+        raise ValueError("catalog contains duplicate model IDs")
     families = set()
-    for m in models:
-        name = (m.get("model_name") or m.get("id") or "").lower()
+    for name in names:
+        name = name.lower()
         for p in CHINESE_PREFIXES:
             if name.startswith(p):
                 families.add("qwen" if p == "qwen" else p)
                 break
-    video = [m for m in models
-             if any(k in (m.get("model_name") or m.get("id") or "").lower()
-                    for k in VIDEO_MARKERS)]
-    return {"routes": len(models), "families": len(families), "video": len(video),
+    video = [name for name in names
+             if any(k in name.lower() for k in VIDEO_MARKERS)]
+    return {"listed_ids": len(names), "families": len(families), "video": len(video),
             "pricing_version": str(data.get("pricing_version") or "?")[:16]}
 
 
@@ -108,8 +122,11 @@ def main():
     args = ap.parse_args()
 
     data = load_catalog(args.catalog_json)
-    live = live_numbers(data)
-    print(f"Live catalog: routes={live['routes']} families={live['families']} "
+    try:
+        live = live_numbers(data)
+    except ValueError as exc:
+        sys.exit(f"ERROR: {exc}")
+    print(f"Live catalog: listed_ids={live['listed_ids']} families={live['families']} "
           f"video={live['video']} version={live['pricing_version']}…")
     print(f"{'DRY RUN — nothing written' if args.dry_run else 'Writing changes'}\n")
 

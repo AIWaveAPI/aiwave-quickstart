@@ -14,7 +14,8 @@ node --check examples/*.mjs               # JS syntax
 ```
 
 `verify_claims.py` reads the live public endpoint and scans the text of all
-repos. If it fails, the catalog changed — run `sync_claims.py` (it rewrites
+repos for catalog-listed IDs, family counts, and video IDs. These counts do
+not measure live route health. If it fails, the catalog changed — run `sync_claims.py` (it rewrites
 only the numbers and stamps `catalog-claims.json`), review `git diff`, then
 re-run the verify. Never patch numbers by hand.
 

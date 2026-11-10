@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify tracked route, family and video counts against the live endpoint.
+"""Verify tracked catalog-ID, family and video counts against the live endpoint.
 
 This scans the ACTUAL TEXT of the repos and reports which file and line is
 stale, so a drifting number can be fixed in one command:
@@ -29,14 +29,14 @@ CHINESE_PREFIXES = ["deepseek", "glm", "kimi", "qwen", "doubao", "step",
 VIDEO_MARKERS = ["kling", "seedance", "hailuo", "wan3.0-video", "vidu"]
 
 # (regex, group with the number, expected key)
-# Deliberately specific: "13 routes on the public rate card" inside a sentence
-# about VIDEO must not be read as a claim about the TOTAL route count.
+# A public rate-card entry proves a listed ID, not a successful live route.
 PATTERNS = [
-    (re.compile(r"(\d+)\s+routes?\s+(?:on|in)\s+the\s+public\s+rate\s+card"), 1, "routes"),
-    (re.compile(r"(\d+)\s+public\s+routes"), 1, "routes"),
-    (re.compile(r"(\d+)\s+AI\s+routes"), 1, "routes"),
+    (re.compile(r"(\d+)\s+model\s+IDs\s+on\s+the\s+public\s+rate\s+card"), 1, "listed_ids"),
+    (re.compile(r"model(?:%20|[-\s])IDs-(\d+)-"), 1, "listed_ids"),
     (re.compile(r"(\d+)\s+Chinese\s+(?:AI\s+|model\s+)?families"), 1, "families"),
     (re.compile(r"(\d+)\s+families"), 1, "families"),
+    (re.compile(r"(\d+)\s+video\s+IDs\s+on\s+the\s+public\s+rate\s+card"), 1, "video"),
+    (re.compile(r"video(?:%20|[-\s])IDs-(\d+)-"), 1, "video"),
     (re.compile(r"(\d+)\s+(?:public\s+)?video[-\s](?:generation\s+)?routes"), 1, "video"),
     (re.compile(r"(?:video(?:%20|[-\s]))?routes?-(\d+)-"), 1, "video"),  # shields.io badge (URL-encoded or plain)
     (re.compile(r"families\s*\+\s*(\d+)\s+video"), 1, "video"),
@@ -61,18 +61,31 @@ def load_catalog(path):
 
 
 def live_numbers(data):
+    if not isinstance(data, dict):
+        raise ValueError("catalog response is not an object")
     models = data.get("models") or data.get("data") or []
+    if not isinstance(models, list) or not models:
+        raise ValueError("catalog has no model-ID list")
+    names = []
+    for model in models:
+        if not isinstance(model, dict):
+            raise ValueError("catalog contains a non-model row")
+        name = model.get("model_name") or model.get("id")
+        if not isinstance(name, str) or not name:
+            raise ValueError("catalog contains a row without a model ID")
+        names.append(name)
+    if len(names) != len(set(names)):
+        raise ValueError("catalog contains duplicate model IDs")
     families = set()
-    for m in models:
-        name = (m.get("model_name") or m.get("id") or "").lower()
+    for name in names:
+        name = name.lower()
         for p in CHINESE_PREFIXES:
             if name.startswith(p):
                 families.add("qwen" if p == "qwen" else p)
                 break
-    video = [m for m in models
-             if any(k in (m.get("model_name") or m.get("id") or "").lower()
-                    for k in VIDEO_MARKERS)]
-    return {"routes": len(models), "families": len(families), "video": len(video),
+    video = [name for name in names
+             if any(k in name.lower() for k in VIDEO_MARKERS)]
+    return {"listed_ids": len(names), "families": len(families), "video": len(video),
             "pricing_version": str(data.get("pricing_version") or "?")[:16]}
 
 
@@ -98,13 +111,12 @@ def main():
     except Exception as e:
         print(f"ERROR: cannot load catalog: {e}", file=sys.stderr)
         return 2
-    models = data.get("models") or data.get("data") or []
-    if not models:
-        print("ERROR: empty catalog — refusing to validate against nothing.", file=sys.stderr)
+    try:
+        live = live_numbers(data)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
         return 2
-
-    live = live_numbers(data)
-    print(f"Live: routes={live['routes']} families={live['families']} "
+    print(f"Live: listed_ids={live['listed_ids']} families={live['families']} "
           f"video={live['video']} version={live['pricing_version']}…\n")
 
     mismatches, scanned = [], 0
