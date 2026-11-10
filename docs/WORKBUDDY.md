@@ -48,6 +48,11 @@ and reasoning levels are not guessed. A model may still be unavailable for
 your specific key. If you need another account group, use WorkBuddy's model
 settings and verify entitlement separately; this script targets `default`.
 
+Entries use WorkBuddy's `Custom` provider and its default address handling
+with the full `/v1/chat/completions` URL. This matches the documented Custom
+provider setup and avoids enabling the advanced Custom Protocol switch when
+the standard Chat Completions path is already available.
+
 After install, open **WorkBuddy > Settings > Models** and run its connection
 test. Then select the model in a new conversation and try a small real task.
 Saving the JSON, `verify`, and a successful connection test each prove

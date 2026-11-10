@@ -1,10 +1,12 @@
 """Offline tests. Every write targets a temporary directory, never a real profile."""
 
 import json
+import io
 import os
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from unittest import mock
 from pathlib import Path
 
@@ -70,7 +72,9 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(entries[0], self.other)
         self.assertEqual([e["id"] for e in entries[1:]], ids)
         self.assertTrue(all(e["supportsToolCall"] is False for e in entries[1:]))
-        self.assertTrue(all(e["useCustomProtocol"] is True for e in entries[1:]))
+        self.assertTrue(all(e["vendor"] == "Custom" for e in entries[1:]))
+        self.assertTrue(all(e["useCustomProtocol"] is False for e in entries[1:]))
+        self.assertTrue(all(e["url"] == wb.CHAT_URL for e in entries[1:]))
         state = (self.path.parent / ".aiwave-connect-state.json").read_text()
         self.assertNotIn("customer-secret", state)
         self.assertNotIn("other-secret", state)
@@ -210,6 +214,15 @@ class ConfigTests(unittest.TestCase):
             self.skipTest("symlinks unavailable")
         with self.assertRaises(wb.ConnectError):
             wb.ConfigStore(link).install(["deepseek-v4-pro"], "customer-secret")
+
+    def test_unexpected_os_error_never_prints_sensitive_details(self):
+        stderr = io.StringIO()
+        with mock.patch.object(wb.ConfigStore, "read", side_effect=OSError("private-fixture")):
+            with redirect_stderr(stderr):
+                result = wb.main(["doctor", "--config", str(self.path)])
+        self.assertEqual(result, 2)
+        self.assertIn("Refused:", stderr.getvalue())
+        self.assertNotIn("private-fixture", stderr.getvalue())
 
 
 if __name__ == "__main__":

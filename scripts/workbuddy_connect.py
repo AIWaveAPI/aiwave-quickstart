@@ -136,9 +136,9 @@ def rate_text(row, group_ratio):
 
 def model_entry(model_id, key):
     return {"id": model_id, "name": "AIWave · " + model_id,
-            "vendor": "AIWave", "url": CHAT_URL, "apiKey": key,
+            "vendor": "Custom", "url": CHAT_URL, "apiKey": key,
             "supportsToolCall": False, "supportsImages": False,
-            "supportsReasoning": False, "useCustomProtocol": True}
+            "supportsReasoning": False, "useCustomProtocol": False}
 
 
 def is_existing_aiwave(entry):
@@ -417,8 +417,12 @@ def main(argv=None):
         print("Open WorkBuddy > Settings > Models; select and test an AIWave model.")
         print("A connection test or task may incur usage charges. See https://aiwave.live/pricing")
         return 0
-    except (ConnectError, OSError) as exc:
+    except ConnectError as exc:
         print("Refused:", exc, file=sys.stderr)
+        return 2
+    except OSError:
+        print("Refused: local file operation failed; no further changes attempted."
+              " Check the private backup and installer state before retrying.", file=sys.stderr)
         return 2
 
 
