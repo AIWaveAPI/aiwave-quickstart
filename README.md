@@ -1,9 +1,13 @@
 # AIWave Quickstart
 
-Call Chinese AI models through one OpenAI-compatible endpoint — **97 public routes, 10 Chinese families, 13 public video routes.** Keep your client code stable while you choose the model for the job.
+Call Chinese AI models through one OpenAI-compatible endpoint. The live catalog
+currently lists **97 model IDs on the public rate card**, spanning
+**10 Chinese families**, including **13 video IDs on the public rate card**.
+Catalog membership does not prove route health or access for your key; test the
+exact operation you plan to use.
 
-[![Models](https://img.shields.io/badge/public%20rate%20card-97%20routes-blue)](https://aiwave.live/models)
-[![Video](https://img.shields.io/badge/public%20video%20routes-13-purple)](https://aiwave.live/models)
+[![Models](https://img.shields.io/badge/model%20IDs-97-blue)](https://aiwave.live/models)
+[![Video](https://img.shields.io/badge/video%20IDs-13-purple)](https://aiwave.live/models)
 [![Docs](https://img.shields.io/badge/docs-quickstart-blue)](https://aiwave.live/docs/quickstart)
 
 ## 0. Which model ID should I use?
