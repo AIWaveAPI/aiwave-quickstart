@@ -79,18 +79,19 @@ def main():
     with tempfile.TemporaryDirectory() as td:
         path = Path(td) / "README.md"
         stale = ("The public rate card lists **9 model IDs on the public rate card** and **3 video IDs on the public rate card**.\n"
-                 "Badge: video%20IDs-3-purple\n")
+                 "Badge: model%20IDs-9-blue and video%20IDs-3-purple\n")
         path.write_text(stale, encoding="utf-8")
 
-        # 3. verify detects all three stale numbers.
+        # 3. verify detects both prose and badge numbers.
         found = mismatches(stale, live)
-        check(len(found) == 3, f"verify detects all 3 stale numbers (got {len(found)})")
+        check(len(found) == 4, f"verify detects all 4 stale numbers (got {len(found)})")
 
         # 4. sync rewrites each of them, and nothing else.
         fixed_lines = [s.replace_line(line, live)[0] for line in stale.splitlines()]
         fixed = "\n".join(fixed_lines)
         check("4 model IDs on the public rate card" in fixed, "sync rewrites listed IDs 9 -> 4")
         check("1 video IDs on the public rate card" in fixed, "sync rewrites video IDs 3 -> 1")
+        check("model%20IDs-4-blue" in fixed, "sync rewrites model-ID badge 9 -> 4")
         check("video%20IDs-1-purple" in fixed, "sync rewrites badge 3 -> 1")
         check("**" in fixed and "The public rate card lists" in fixed,
               "sync preserves surrounding text")
