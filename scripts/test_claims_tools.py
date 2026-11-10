@@ -51,16 +51,18 @@ def main():
           "patterns are byte-identical across both tools")
 
     # 2. Fixture: 4 models, 3 Chinese families (deepseek/glm/kling), 1 video.
-    fixture = {"models": [
-        {"model_name": "deepseek-x", "pricing_version": "abc123"},
-        {"model_name": "glm-y", "pricing_version": "abc123"},
-        {"model_name": "kling-v9", "pricing_version": "abc123"},
-        {"model_name": "gpt-z", "pricing_version": "abc123"},
+    fixture = {"pricing_version": "current-catalog", "models": [
+        {"model_name": "deepseek-x", "pricing_version": "stale-row"},
+        {"model_name": "glm-y", "pricing_version": "stale-row"},
+        {"model_name": "kling-v9", "pricing_version": "stale-row"},
+        {"model_name": "gpt-z", "pricing_version": "stale-row"},
     ]}
     vn, sn = v.live_numbers(fixture), s.live_numbers(fixture)
     check(vn == sn, "both tools compute identical live numbers")
     check(vn["routes"] == 4 and vn["families"] == 3 and vn["video"] == 1,
           f"fixture math correct: {vn}")
+    check(vn["pricing_version"] == "current-catalog",
+          "report the response catalog version, not a model row version")
 
     live = {"routes": 4, "families": 3, "video": 1}
     with tempfile.TemporaryDirectory() as td:

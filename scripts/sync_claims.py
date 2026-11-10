@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Re-sync every published catalog number with the live public endpoint.
+"""Re-sync tracked route, family and video counts with the live endpoint.
 
 The catalog drifts (models are added/retired weekly). Hand-editing seven
-files each time is how stale numbers survive. This script finds every claim
-pattern in the repos and rewrites ONLY the number, keeping the surrounding
+files each time is how stale numbers survive. This script finds the defined
+count patterns in the repos and rewrites ONLY the number, keeping the surrounding
 text intact.
 
 Usage:
@@ -71,7 +71,7 @@ def live_numbers(data):
              if any(k in (m.get("model_name") or m.get("id") or "").lower()
                     for k in VIDEO_MARKERS)]
     return {"routes": len(models), "families": len(families), "video": len(video),
-            "pricing_version": str(models[0].get("pricing_version", "?"))[:16] if models else "?"}
+            "pricing_version": str(data.get("pricing_version") or "?")[:16]}
 
 
 def replace_line(line, live):
@@ -169,3 +169,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

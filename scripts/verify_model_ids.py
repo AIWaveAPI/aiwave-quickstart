@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Verify that every model ID written in our READMEs exists on the live card.
+"""Verify matching backticked model IDs in Markdown against the live card.
 
 A made-up ID in a README is worse than a missing one: a developer copies it,
-gets a 404, and leaves. This checker prevents that, and runs in CI daily
+gets a 404, and leaves. This checker catches the matching cases, and runs in CI daily
 alongside verify_claims.py.
 
 Rules:
@@ -15,7 +15,7 @@ Rules:
 
 Usage:
     python3 scripts/verify_model_ids.py --repo-root <root> [--catalog-json PATH]
-Exit code 0 = all IDs real. 1 = at least one made-up ID. 2 = no catalog data.
+Exit code 0 = checked mentions match. 1 = a checked ID is absent. 2 = no catalog data.
 """
 import argparse
 import json
@@ -37,6 +37,10 @@ WHITELIST = {"kling", "seedance", "hailuo", "wan", "qwen3.8", "qwen3.7",
 # made-up ID. Check the whole line, not just the text before the token,
 # because the phrase can sit in a later table column.
 NEGATIVE = re.compile(r"\b(?:there\s+is\s+)?no\s+`?[a-z0-9._-]+`?\s+(?:id|model|route)\b|\bnot\s+on\s+(?:our|the)\s+(?:card|rate\s+card)\b", re.I)
+NEGATIVE_SUFFIX = re.compile(
+    r"\s+(?:(?:id|model|route)\s+)?(?:is\s+)?not\s+on\s+(?:our|the)\s+(?:rate\s+)?card\b",
+    re.I,
+)
 IN_CODE = re.compile(r"`([^`\n]+)`")
 
 SKIP_DIRS = {".git", "node_modules", "build", "dist", "__pycache__", "pkg", "secrets"}
@@ -61,6 +65,14 @@ def looks_like_id(token):
     if t in WHITELIST:
         return False
     return any(t.lower().startswith(p) for p in PREFIXES)
+
+
+def is_negated_id(line, token_match):
+    """Only exempt the ID named by a negative statement, not its whole line."""
+    if any(m.start() <= token_match.start() and token_match.end() <= m.end()
+           for m in NEGATIVE.finditer(line)):
+        return True
+    return bool(NEGATIVE_SUFFIX.match(line[token_match.end():]))
 
 
 def main():
@@ -101,8 +113,7 @@ def main():
                     seen += 1
                     if token in real:
                         continue
-                    prefix = line[:m.start()]
-                    if NEGATIVE.search(line):
+                    if is_negated_id(line, m):
                         continue  # deliberate "there is no `x` ID" statement
                     bad.append((rel, lineno, token, line.strip()[:96]))
 
@@ -116,9 +127,10 @@ def main():
         print("\nFix the ID (copy it from /api/pricing), or mark it clearly as")
         print("a negative statement (\"there is no `x` ID\"). Never invent one.")
         return 1
-    print("RESULT: EVERY MODEL ID VERIFIED")
+    print("RESULT: CHECKED MODEL ID MENTIONS VERIFIED")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

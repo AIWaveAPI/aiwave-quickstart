@@ -29,7 +29,9 @@ Common searches and the exact IDs on our card (a lookup table, not a review):
 | `kling` / `seedance` / `wan` video | `kling-v3`, `kling-video-o1`, `doubao-seedance-2-5-260628`, `wan3.0-video` |
 | `chinese ai api pricing 2026` | [Dated USD rates](https://aiwave.live/pricing) · `python3 scripts/cost.py --compare <ids>` |
 
-Every number in this repo is checked against that endpoint by CI daily.
+The scheduled checker covers selected catalog counts and tracked model IDs.
+Confirm the current rate and account-group access on the live pricing page
+before sending a paid request; the checker does not audit every number here.
 
 ## 1. Set your environment
 
@@ -72,10 +74,14 @@ node examples/node.mjs
 
 Use the public model list at [aiwave.live/models](https://aiwave.live/models)
 and the dated rate card at [aiwave.live/pricing](https://aiwave.live/pricing).
-Model IDs are explicit, so you can change the model without changing the
-request shape.
+Model IDs are explicit. Reuse the chat request shape only after checking that
+the selected route supports that endpoint and the features your app needs.
 
 Popular picks (reasoning & chat):
+
+The numeric rates in this table are checked against the live `/api/pricing`
+card in CI. Other price references are outside that check; use the dated
+[pricing page](https://aiwave.live/pricing) before estimating a purchase.
 
 | Model | Best for | Rate |
 |---|---|---|
@@ -89,11 +95,11 @@ Popular picks (reasoning & chat):
 
 > **Status: experimental.** The video endpoint occasionally surfaces upstream
 > channel errors while we harden it. Try it, but don't build production
-> workflows on it yet. A much better experience — a full cinematic prompt
-> system and storyboard engine — is coming with **AIWave Canvas** (see below).
+> workflows on it yet. Keep task IDs and reconcile usage before resubmitting
+> an uncertain paid operation.
 
-The same key also drives AI video routes — Kling, Seedance, Hailuo, Wan, and
-Vidu. Video routes require a paid account group (from $5).
+The same key can access eligible AI video routes — Kling, Seedance, Hailuo,
+Wan, and Vidu. Check the exact model and account-group eligibility before use.
 
 ```bash
 bash examples/video_curl.sh "A red sports car drifting through a neon city"
@@ -103,10 +109,11 @@ Full list of video models: [aiwave.live/models](https://aiwave.live/models).
 
 ## 6. Prompt library sample
 
-**[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack)** —
-four bilingual video-prompt modules (three cinematic styles + one camera
-move), each with a validation record and a reproduction command. Free (CC
-BY-NC). Works with any video model.
+**[aiwave-video-pack](https://github.com/AIWaveAPI/aiwave-video-pack)** has
+four bilingual video-prompt starting points. The author-reported single runs
+do not have public clips or task receipts, so the visual effects are not
+independently validated. Check model eligibility and the
+[CC BY-NC terms](https://creativecommons.org/licenses/by-nc/4.0/) before use.
 
 ## 7. Handle the common responses
 
@@ -118,9 +125,11 @@ decision table in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 - `401`: check that the key is present and the `Bearer` prefix is included.
 - `402`: add balance or use an enabled account group with available quota.
 - `404`: model ID not found or retired — the handler suggests the closest ID from the live catalog.
-- `429`: **use the `Retry-After` header**, then bounded exponential backoff with jitter.
+- `429`: for the chat example, use `Retry-After` with bounded backoff. For a
+  potentially billable video submission, inspect task history and usage before
+  any new POST.
 - `5xx`: keep the request id, retry only when the operation is safe to repeat.
-- Video tasks stuck at `NOT_START 0%` for >3 min: keep the task ID and check status or usage before resubmitting — see the troubleshooting doc.
+- Video tasks with an uncertain terminal state: keep the task ID and check status or usage before resubmitting — see the troubleshooting doc.
 
 ## 8. Estimate your cost
 
@@ -144,18 +153,21 @@ reproducible. Misspelled model IDs get a suggestion from the live catalog.
 
 ## 8b. Continuous verification
 
-Every push runs [CI](.github/workflows/ci.yml): Python 3.8/3.10/3.12 and
-Node 18/20 syntax checks, offline tests, and a live check that the numbers
-in **every AIWaveAPI repo** still match the public pricing endpoint. CI also
-runs daily, so catalog drift is caught without a commit.
+Main-branch pushes and pull requests run [CI](.github/workflows/ci.yml): Python
+3.8/3.10/3.12 and Node 18/20 syntax checks and offline tests. A scheduled
+live-catalog check also runs daily across six selected developer-facing
+repositories. The live check covers tracked
+route/family/video counts, matching backticked model IDs, and the three numeric
+Popular picks rates in this README. It does not audit every price,
+account-group route, or repository in the organization.
 
-Model catalogs drift. When the checker turns red it prints the exact
-`file:line` and the correct value; fix all of them in one command instead of
-hand-editing seven files:
+Model catalogs drift. For a tracked count mismatch, the checker prints the
+`file:line` and the current count. Use the sync command to propose count
+updates, then review the diff. Model-ID findings require separate review:
 
 ```bash
-python3 scripts/sync_claims.py --repo-root <path-to-all-repos>   # rewrites only the numbers
-python3 scripts/verify_claims.py --repo-root <path-to-all-repos>  # must print ALL CLAIMS VERIFIED
+python3 scripts/sync_claims.py --repo-root <path-to-selected-repos>   # proposes tracked count updates
+python3 scripts/verify_claims.py --repo-root <path-to-selected-repos>  # verifies tracked counts only
 git diff                                                        # review before committing
 ```
 
@@ -202,6 +214,16 @@ continuation support. If you previously used this script for Codex,
 made by the newer backup format. Older `*.aiwave.bak` files require manual
 review; the script will not overwrite later edits automatically.
 
+## 11. Connect WorkBuddy with your own AIWave key
+
+The [WorkBuddy guide](docs/WORKBUDDY.md) covers a local, reversible Windows
+setup. Start with `python scripts/workbuddy_connect.py plan` to see the exact
+model IDs and current catalog-based price estimates before any file changes.
+The installer prompts for **your** AIWave key locally and never prints it.
+WorkBuddy's connection test and actual tasks can incur usage charges; verify
+the model and bill in your AIWave Console. Catalog eligibility is not a claim
+that every WorkBuddy capability has been tested.
+
 ## Repository layout
 
 - `examples/curl.sh` — minimal shell request
@@ -212,6 +234,7 @@ review; the script will not overwrite later edits automatically.
 - `examples/video_node.mjs` — same flow in Node.js
 - `.env.example` — local variable names only
 - `scripts/cost.py` — estimate cost from live prices
+- `scripts/workbuddy_connect.py` — preview, add, verify, and undo local WorkBuddy models
 - `examples/error_handling.py` / `error_handling.mjs` — copy-paste error handlers
 - `docs/TROUBLESHOOTING.md` — full error decision table
 

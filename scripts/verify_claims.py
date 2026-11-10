@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify every published catalog number against the live public endpoint.
+"""Verify tracked route, family and video counts against the live endpoint.
 
 This scans the ACTUAL TEXT of the repos and reports which file and line is
 stale, so a drifting number can be fixed in one command:
@@ -11,7 +11,8 @@ Usage:
 
 --catalog-json  lets CI or an offline machine verify against a saved copy of
                 the public endpoint response. Default fetches the live URL.
-Exit code 0 = every published number matches. 1 = stale claim(s). 2 = no data.
+Only PATTERNS matches in SCAN_EXT files are checked; this is not a price audit.
+Exit code 0 = tracked counts match. 1 = stale tracked count(s). 2 = no data.
 No API key required — this reads only public data.
 """
 import argparse
@@ -72,7 +73,7 @@ def live_numbers(data):
              if any(k in (m.get("model_name") or m.get("id") or "").lower()
                     for k in VIDEO_MARKERS)]
     return {"routes": len(models), "families": len(families), "video": len(video),
-            "pricing_version": str(models[0].get("pricing_version", "?"))[:16] if models else "?"}
+            "pricing_version": str(data.get("pricing_version") or "?")[:16]}
 
 
 def iter_files(root):
@@ -140,9 +141,10 @@ def main():
             print(f"      > {snippet}")
         print("\nFix all with:  python3 scripts/sync_claims.py --repo-root <root>")
         return 1
-    print("RESULT: ALL PUBLISHED CLAIMS VERIFIED")
+    print("RESULT: ALL TRACKED CATALOG COUNTS MATCH")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

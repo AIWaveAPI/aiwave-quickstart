@@ -1,0 +1,216 @@
+"""Offline tests. Every write targets a temporary directory, never a real profile."""
+
+import json
+import os
+import subprocess
+import tempfile
+import unittest
+from unittest import mock
+from pathlib import Path
+
+from scripts import workbuddy_connect as wb
+
+
+def catalog():
+    def row(name, groups, endpoints):
+        return {"model_name": name, "enable_groups": groups,
+                "supported_endpoint_types": endpoints, "quota_type": 0,
+                "model_ratio": 0.5, "completion_ratio": 2, "model_price": 0}
+    return {"success": True, "pricing_version": "test-version", "group_ratio": {"default": 1},
+            "data": [row("deepseek-v4.1-flash", ["default"], ["openai"]),
+                     row("deepseek-v4-pro", ["default"], ["openai"]),
+                     row("claude-sonnet-5-coding-team", ["coding team"], ["openai"]),
+                     row("video-only", ["default"], ["video"])]}
+
+
+class CatalogTests(unittest.TestCase):
+    def test_only_default_openai_models_are_eligible(self):
+        names = wb.eligible_model_ids(catalog())
+        self.assertEqual(names, ["deepseek-v4-pro", "deepseek-v4.1-flash"])
+
+    def test_explicit_model_must_be_eligible(self):
+        with self.assertRaises(wb.ConnectError):
+            wb.select_model_ids(catalog(), ["claude-sonnet-5-coding-team"], False)
+
+    def test_default_set_is_small(self):
+        self.assertEqual(wb.select_model_ids(catalog(), None),
+                         ["deepseek-v4.1-flash", "deepseek-v4-pro"])
+
+    def test_non_chat_model_is_not_installable_even_with_endpoint_label(self):
+        data = catalog()
+        data["data"].append({"model_name": "qwen3.7-text-embedding",
+                             "enable_groups": ["default"],
+                             "supported_endpoint_types": ["openai"]})
+        with self.assertRaises(wb.ConnectError):
+            wb.select_model_ids(data, ["qwen3.7-text-embedding"])
+
+    def test_missing_group_multiplier_never_becomes_a_price(self):
+        data = catalog()
+        del data["group_ratio"]["default"]
+        self.assertIsNone(wb.default_group_ratio(data))
+        self.assertIn("unverified", wb.rate_text(data["data"][0], wb.default_group_ratio(data)))
+
+
+class ConfigTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "models.json"
+        self.other = {"id": "other-model", "name": "Other", "vendor": "Other",
+                      "url": "https://other.example/v1", "apiKey": "other-secret"}
+        self.original = json.dumps([self.other], separators=(",", ":")).encode()
+        self.path.write_bytes(self.original)
+        self.store = wb.ConfigStore(self.path)
+
+    def test_install_preserves_other_models_and_undo_preserves_later_edits(self):
+        ids = wb.select_model_ids(catalog(), None, False)
+        result = self.store.install(ids, "customer-secret")
+        self.assertEqual(result["added"], 2)
+        entries = json.loads(self.path.read_text(encoding="utf-8"))
+        self.assertEqual(entries[0], self.other)
+        self.assertEqual([e["id"] for e in entries[1:]], ids)
+        self.assertTrue(all(e["supportsToolCall"] is False for e in entries[1:]))
+        self.assertTrue(all(e["useCustomProtocol"] is True for e in entries[1:]))
+        state = (self.path.parent / ".aiwave-connect-state.json").read_text()
+        self.assertNotIn("customer-secret", state)
+        self.assertNotIn("other-secret", state)
+        self.assertEqual(len(list(self.path.parent.glob("models.json.aiwave-backup-*"))), 1)
+        entries.append({"id": "later", "vendor": "Other", "apiKey": "later-secret"})
+        self.path.write_text(json.dumps(entries), encoding="utf-8")
+        undone = self.store.undo()
+        self.assertEqual(undone["removed"], 2)
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")),
+                         [self.other, {"id": "later", "vendor": "Other", "apiKey": "later-secret"}])
+
+    def test_failed_config_write_restores_previous_installer_state(self):
+        write = wb._write_private
+
+        def fail_config_only(path, data):
+            if path == self.path:
+                raise OSError("simulated config write failure")
+            return write(path, data)
+
+        with mock.patch.object(wb, "_write_private", side_effect=fail_config_only):
+            with self.assertRaises(OSError):
+                self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+
+        self.assertEqual(self.path.read_bytes(), self.original)
+        self.assertFalse(self.store.state_path.exists())
+        self.assertEqual(len(list(self.path.parent.glob("models.json.aiwave-backup-*"))), 1)
+
+    def test_permission_failure_happens_before_any_secret_is_written(self):
+        inspected_sizes = []
+
+        def refuse_private_path(path):
+            inspected_sizes.append(path.stat().st_size)
+            raise wb.ConnectError("synthetic permission failure")
+
+        with mock.patch.object(wb, "_private", side_effect=refuse_private_path):
+            with self.assertRaises(wb.ConnectError):
+                self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+
+        self.assertEqual(inspected_sizes, [0])
+        self.assertEqual(self.path.read_bytes(), self.original)
+        self.assertFalse(self.store.state_path.exists())
+        self.assertEqual(list(self.path.parent.glob(".aiwave-connect-*")), [])
+        self.assertEqual(list(self.path.parent.glob("models.json.aiwave-backup-*")), [])
+
+    @unittest.skipUnless(os.name == "nt", "Windows ACL check")
+    def test_written_config_and_backups_exclude_other_ordinary_accounts(self):
+        self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+        current_user = subprocess.run(["whoami"], capture_output=True, text=True,
+                                      check=True).stdout.strip().casefold()
+        allowed = {current_user, "nt authority\\system", "builtin\\administrators", "owner rights"}
+        paths = [self.path, self.store.state_path]
+        paths.extend(self.path.parent.glob("models.json.aiwave-backup-*"))
+        self.assertEqual(len(paths), 3)
+        for path in paths:
+            acl = subprocess.run(["icacls", str(path)], capture_output=True, text=True,
+                                 check=True).stdout
+            entries = [line.replace(str(path), "", 1).strip()
+                       for line in acl.splitlines() if ":(" in line]
+            identities = {line.split(":(", 1)[0].casefold() for line in entries}
+            self.assertIn(current_user, identities)
+            self.assertFalse(identities - allowed, f"unexpected ACL on {path.name}: {identities}")
+
+    def test_failed_second_install_keeps_existing_undo_state(self):
+        self.store.install(["deepseek-v4.1-flash"], "customer-secret")
+        before_config = self.path.read_bytes()
+        before_state = self.store.state_path.read_bytes()
+        write = wb._write_private
+
+        def fail_config_only(path, data):
+            if path == self.path:
+                raise OSError("simulated config write failure")
+            return write(path, data)
+
+        with mock.patch.object(wb, "_write_private", side_effect=fail_config_only):
+            with self.assertRaises(OSError):
+                self.store.install(["deepseek-v4-pro"], "customer-secret")
+
+        self.assertEqual(self.path.read_bytes(), before_config)
+        self.assertEqual(self.store.state_path.read_bytes(), before_state)
+        self.assertEqual(self.store.undo()["removed"], 1)
+
+    def test_repeat_install_is_idempotent(self):
+        ids = wb.select_model_ids(catalog(), None, False)
+        self.store.install(ids, "customer-secret")
+        before = self.path.read_bytes()
+        self.assertEqual(self.store.install(ids, "customer-secret")["added"], 0)
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_collision_does_not_modify_file(self):
+        self.path.write_text(json.dumps([{"id": "deepseek-v4-pro", "vendor": "Other"}]),
+                             encoding="utf-8")
+        before = self.path.read_bytes()
+        with self.assertRaises(wb.ConnectError):
+            self.store.install(["deepseek-v4-pro"], "customer-secret")
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_existing_manual_aiwave_entry_is_preserved_not_owned(self):
+        manual = {"id": "deepseek-v4-pro", "name": "My Pro", "vendor": "Custom",
+                  "url": "https://aiwave.live/v1/chat/completions", "apiKey": "older-own-key"}
+        self.path.write_text(json.dumps([self.other, manual]), encoding="utf-8")
+        result = self.store.install(["deepseek-v4.1-flash", "deepseek-v4-pro"], "new-own-key")
+        self.assertEqual(result["added"], 1)
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8"))[1], manual)
+        self.store.undo()
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), [self.other, manual])
+
+    def test_malformed_existing_url_cannot_crash_or_be_adopted(self):
+        bad = {"id": "deepseek-v4-pro", "vendor": "Custom",
+               "url": "https://aiwave.live:bad/v1", "apiKey": "old-secret"}
+        self.path.write_text(json.dumps([bad]), encoding="utf-8")
+        with self.assertRaises(wb.ConnectError):
+            self.store.install(["deepseek-v4-pro"], "customer-secret")
+
+    def test_malformed_file_does_not_modify_file(self):
+        self.path.write_text("not-json", encoding="utf-8")
+        with self.assertRaises(wb.ConnectError):
+            self.store.install(["deepseek-v4-pro"], "customer-secret")
+        self.assertEqual(self.path.read_text(encoding="utf-8"), "not-json")
+
+    def test_undo_refuses_modified_owned_entry(self):
+        self.store.install(["deepseek-v4-pro"], "customer-secret")
+        entries = json.loads(self.path.read_text(encoding="utf-8"))
+        entries[-1]["name"] = "My custom name"
+        self.path.write_text(json.dumps(entries), encoding="utf-8")
+        before = self.path.read_bytes()
+        with self.assertRaises(wb.ConnectError):
+            self.store.undo()
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_symlink_is_refused(self):
+        target = self.path.parent / "actual.json"
+        target.write_bytes(self.original)
+        link = self.path.parent / "link.json"
+        try:
+            link.symlink_to(target)
+        except OSError:
+            self.skipTest("symlinks unavailable")
+        with self.assertRaises(wb.ConnectError):
+            wb.ConfigStore(link).install(["deepseek-v4-pro"], "customer-secret")
+
+
+if __name__ == "__main__":
+    unittest.main()

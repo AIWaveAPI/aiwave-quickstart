@@ -4,11 +4,14 @@ import os
 import shutil
 import subprocess
 import tempfile
+import unittest
 from pathlib import Path
 
 if os.name == "nt" or not shutil.which("bash"):
     print("SKIP: requires bash")
-    raise SystemExit(0)
+    if __name__ == "__main__":
+        raise SystemExit(0)
+    raise unittest.SkipTest("requires bash")
 
 script = Path(__file__).resolve().parent.parent / "examples" / "video_curl.sh"
 prompt = 'He said "go" \\ backslash\nnext line'
