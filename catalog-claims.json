@@ -1,8 +1,8 @@
 {
-  "as_of_utc": "2026-11-04 14:35 UTC",
+  "as_of_utc": "2026-11-10 18:10 UTC",
   "source": "https://aiwave.live/api/pricing",
-  "routes": 97,
+  "listed_ids": 97,
   "families": 10,
   "video": 13,
-  "pricing_version": "5a90f2b86c08bd98"
+  "pricing_version": "a42d372ccf0b5dd1"
 }
