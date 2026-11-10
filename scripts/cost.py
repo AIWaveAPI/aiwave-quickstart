@@ -44,6 +44,26 @@ def fetch():
         return json.loads(r.read().decode("utf-8"))
 
 
+def catalog_index(data):
+    """Index a complete, unambiguous catalog before making any price quote."""
+    if not isinstance(data, dict):
+        raise ValueError("invalid catalog response")
+    models = data.get("models") if "models" in data else data.get("data")
+    if not isinstance(models, list) or not models:
+        raise ValueError("endpoint returned no model list")
+    by_name = {}
+    for row in models:
+        if not isinstance(row, dict):
+            raise ValueError("invalid model row")
+        name = row.get("model_name") or row.get("id")
+        if not isinstance(name, str) or not name.strip() or name != name.strip():
+            raise ValueError("invalid model ID")
+        if name in by_name:
+            raise ValueError(f"duplicate model ID: {name}")
+        by_name[name] = row
+    return by_name
+
+
 def _number(value, label, *, allow_zero=False):
     if isinstance(value, bool):
         raise ValueError(f"missing or invalid {label}")
@@ -133,11 +153,10 @@ def main():
         data = fetch()
     except Exception as e:
         sys.exit(f"Could not reach {ENDPOINT}: {e}")
-    models = data.get("models") or data.get("data") or []
-    if not models:
-        sys.exit("Endpoint returned no models — refusing to guess prices.")
-
-    by_name = {m.get("model_name") or m.get("id"): m for m in models}
+    try:
+        by_name = catalog_index(data)
+    except ValueError as exc:
+        sys.exit(f"Cannot use live catalog: {exc}; refusing to guess prices.")
     version = str(data.get("pricing_version", "unknown"))[:16]
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
