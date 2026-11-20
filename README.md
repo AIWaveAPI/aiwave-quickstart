@@ -1,12 +1,12 @@
 # AIWave Quickstart
 
 Call Chinese AI models through one OpenAI-compatible endpoint. The live catalog
-currently lists **97 model IDs on the public rate card**, spanning
+currently lists **91 model IDs on the public rate card**, spanning
 **10 Chinese families**, including **13 video IDs on the public rate card**.
 Catalog membership does not prove route health or access for your key; test the
 exact operation you plan to use.
 
-[![Models](https://img.shields.io/badge/model%20IDs-97-blue)](https://aiwave.live/models)
+[![Models](https://img.shields.io/badge/model%20IDs-91-blue)](https://aiwave.live/models)
 [![Video](https://img.shields.io/badge/video%20IDs-13-purple)](https://aiwave.live/models)
 [![Docs](https://img.shields.io/badge/docs-quickstart-blue)](https://aiwave.live/docs/quickstart)
 
