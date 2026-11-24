@@ -30,7 +30,12 @@ with tempfile.TemporaryDirectory() as td:
                 setup.main()
         configured = json.loads(config.read_text())
         assert configured["skipWorkflowUsageWarning"] is True
-        assert configured["env"]["ANTHROPIC_BASE_URL"] == "https://aiwave.live/anthropic"
+        # Claude Code appends /v1/messages to the base. A base ending in
+        # /anthropic would hit the SPA shell and return HTML, so pin the
+        # bare origin and prove the joined URL is the live Messages route.
+        assert configured["env"]["ANTHROPIC_BASE_URL"] == "https://aiwave.live"
+        assert not configured["env"]["ANTHROPIC_BASE_URL"].rstrip("/").endswith("/anthropic")
+        assert configured["env"]["ANTHROPIC_BASE_URL"] + "/v1/messages" == "https://aiwave.live/v1/messages"
         assert configured["env"]["ANTHROPIC_AUTH_TOKEN"] == "synthetic-key"
         assert setup.restore_one(config)
         assert config.read_text() == original

@@ -225,9 +225,10 @@ python3 scripts/aiwave-setup.py                  # configure Claude Code
 python3 scripts/aiwave-setup.py --restore        # restore if unchanged since setup
 ```
 
-The script writes the Anthropic-compatible endpoint
-`https://aiwave.live/anthropic` to `~/.claude/settings.json`. Its default
-model ID is `claude-sonnet-5-coding-team`; check current access and price in
+The script writes the Messages API base `https://aiwave.live` (no path
+prefix — Claude Code appends `/v1/messages`) to `~/.claude/settings.json`.
+Its default model ID is `claude-sonnet-5-coding-team`; check current access
+and price in
 the [live catalog](https://aiwave.live/api/pricing) before use. Run
 `python3 scripts/test_aiwave_setup.py` and
 `python3 -m unittest scripts.test_aiwave_setup_safety` for offline checks.
