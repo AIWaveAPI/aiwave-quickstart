@@ -30,7 +30,12 @@ with tempfile.TemporaryDirectory() as td:
     print("=== real write into temp HOME ===")
     m.setup_claude("sk-test-fake", False); m.setup_codex("sk-test-fake", False)
     cfg = json.loads(cs.read_text())
-    assert cfg["env"]["ANTHROPIC_BASE_URL"] == "https://aiwave.live/anthropic"
+    # Claude Code appends /v1/messages to the base. A base ending in
+    # /anthropic would hit the SPA shell and return HTML, so pin the bare
+    # origin and prove the joined URL is the live Messages route.
+    assert cfg["env"]["ANTHROPIC_BASE_URL"] == "https://aiwave.live"
+    assert not cfg["env"]["ANTHROPIC_BASE_URL"].rstrip("/").endswith("/anthropic")
+    assert cfg["env"]["ANTHROPIC_BASE_URL"] + "/v1/messages" == "https://aiwave.live/v1/messages"
     assert cfg["env"]["ANTHROPIC_MODEL"] == "claude-sonnet-5-coding-team"
     assert cfg["skipWorkflowUsageWarning"] is True, "existing settings lost!"
     print("  PASS: Claude JSON valid, env injected, existing keys preserved")

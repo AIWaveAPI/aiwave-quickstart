@@ -4,7 +4,9 @@
 Backed by verified config formats (see README section "Agent tool setup"):
   - Claude Code: ~/.claude/settings.json -> {"env": {"ANTHROPIC_BASE_URL": ...,
     "ANTHROPIC_AUTH_TOKEN": ..., "ANTHROPIC_MODEL": ...}}
-    AIWave exposes an Anthropic-compatible endpoint at /anthropic.
+    AIWave serves the Anthropic Messages API at /v1/messages (no /anthropic
+    prefix). Claude Code appends /v1/messages to ANTHROPIC_BASE_URL, so the
+    base must be the bare origin.
   - Codex CLI: ~/.codex/config.toml -> [model_providers.aiwave] with
     base_url, wire_api="chat", env_key; plus top-level model_provider.
 
@@ -36,7 +38,11 @@ CODEX_CONFIG = HOME / ".codex" / "config.toml"
 # These are exact model IDs currently on the public rate card.
 CLAUDE_MODEL = "claude-sonnet-5-coding-team"
 CODEX_MODEL = "deepseek-v4-pro"
-ANTHROPIC_BASE = "https://aiwave.live/anthropic"
+# Claude Code calls ${ANTHROPIC_BASE_URL}/v1/messages. Our Messages route is
+# /v1/messages, so the base is the bare origin. Adding /anthropic here makes
+# every client request land on the SPA shell (HTTP 200 text/html) instead of
+# the API: verified 2026-11-25, POST /anthropic/v1/messages returns HTML.
+ANTHROPIC_BASE = "https://aiwave.live"
 OPENAI_BASE = "https://aiwave.live/v1"
 
 

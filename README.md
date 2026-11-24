@@ -184,7 +184,7 @@ python3 scripts/aiwave-setup.py --restore    # undo (from backups)
 
 | Tool | Config file | Endpoint |
 |---|---|---|
-| Claude Code | `~/.claude/settings.json` → `env` block | `https://aiwave.live/anthropic` (Anthropic-compatible) |
+| Claude Code | `~/.claude/settings.json` → `env` block | `https://aiwave.live` (Anthropic Messages at `/v1/messages`) |
 | Codex CLI | `~/.codex/config.toml` → `[model_providers.aiwave]` | `https://aiwave.live/v1` (OpenAI-compatible) |
 
 Default models (verified against the live catalog): `claude-sonnet-5-coding-team`
